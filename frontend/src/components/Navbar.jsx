@@ -20,6 +20,9 @@ const Navbar = () => {
               <a href="#experiencias" className="hover:text-primary-600 transition-colors">Experiencias</a>
               <a href="#tesoros" className="hover:text-primary-600 transition-colors">Tesoros</a>
               <a href="#reserva" className="hover:text-primary-600 transition-colors">Reservar Turno</a>
+              {(profile?.role === 'admin' || profile?.role === 'superadmin') && (
+                <a href="/admin" className="text-primary-600 font-bold hover:text-primary-800 transition-colors">Admin</a>
+              )}
             </div>
 
             <div className="flex items-center space-x-4">
