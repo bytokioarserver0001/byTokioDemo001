@@ -1,18 +1,14 @@
 import React from 'react'
 import Hero from '../components/Hero'
 import Services from '../components/Services'
+import Tesoros from '../components/Tesoros'
 
 const Home = () => {
   return (
     <>
       <Hero />
       <Services />
-      
-      {/* Placeholder for future sections */}
-      <section id="tesoros" className="py-20 text-center">
-        <h2 className="text-3xl font-serif text-slate-900 mb-8">Nuestros Tesoros</h2>
-        <p className="text-gray-400 italic">Próximamente: Una selección curada de productos para tu bienestar.</p>
-      </section>
+      <Tesoros />
 
       <section id="reserva" className="py-20 bg-primary-900 text-white overflow-hidden relative">
         <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
