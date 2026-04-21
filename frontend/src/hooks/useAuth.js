@@ -7,12 +7,23 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    if (!error) setProfile(data);
+    try {
+      console.log('Fetching profile for:', userId);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching profile:', error.message);
+      } else {
+        console.log('Profile found:', data);
+        setProfile(data);
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching profile:', err);
+    }
   };
 
   useEffect(() => {
@@ -44,8 +55,12 @@ export const useAuth = () => {
     if (error) throw error;
   };
 
-  const register = async (email, password) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+  const register = async (email, password, metadata = {}) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: metadata }
+    });
     if (error) throw error;
   };
 

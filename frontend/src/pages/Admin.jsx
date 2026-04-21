@@ -69,46 +69,52 @@ const Admin = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-900 text-white text-xs uppercase tracking-widest">
-                <th className="px-8 py-4">Usuario</th>
-                <th className="px-8 py-4">Email</th>
-                <th className="px-8 py-4">Rol Actual</th>
-                <th className="px-8 py-4 text-center">Acciones</th>
+              <tr className="bg-slate-900 text-white text-[10px] uppercase tracking-widest">
+                <th className="px-8 py-5">Cliente</th>
+                <th className="px-8 py-5">Contacto</th>
+                <th className="px-8 py-5">Rol Actual</th>
+                <th className="px-8 py-5 text-center">Gestión de Nivel</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {users.map((u) => (
-                <tr key={u.id} className="hover:bg-primary-50/30 transition-colors">
+                <tr key={u.id} className="hover:bg-primary-50/30 transition-colors group">
                   <td className="px-8 py-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-slate-500">
-                        <User size={16} />
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center text-slate-500 shadow-sm group-hover:from-primary-100 group-hover:to-primary-200 group-hover:text-primary-600 transition-all">
+                        <User size={20} />
                       </div>
-                      <span className="font-medium text-slate-700">{u.username || 'Sin nombre'}</span>
+                      <div>
+                        <div className="font-bold text-slate-800">{u.full_name || 'Sin nombre'}</div>
+                        <div className="text-xs text-slate-400">{u.email}</div>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-8 py-6 text-slate-500 text-sm">{u.email}</td>
                   <td className="px-8 py-6">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      u.role === 'superadmin' ? 'bg-red-100 text-red-700' :
-                      u.role === 'admin' ? 'bg-primary-100 text-primary-700' :
-                      'bg-slate-100 text-slate-600'
+                    <div className="text-sm text-slate-600">{u.phone || '—'}</div>
+                    <div className="text-[10px] text-slate-400 uppercase tracking-tighter">Teléfono</div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
+                      u.role === 'superadmin' ? 'bg-red-500 text-white' :
+                      u.role === 'admin' ? 'bg-primary-600 text-white' :
+                      'bg-slate-200 text-slate-700'
                     }`}>
                       {u.role}
                     </span>
                   </td>
                   <td className="px-8 py-6">
                     {profile.role === 'superadmin' && u.email !== profile.email && (
-                      <div className="flex items-center justify-center space-x-2">
+                      <div className="flex items-center justify-center">
                         <select 
-                          className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="text-xs bg-white border-2 border-slate-100 rounded-xl px-4 py-2 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-bold text-slate-700 appearance-none cursor-pointer hover:border-primary-200"
                           defaultValue={u.role}
                           onChange={(e) => updateRole(u.id, e.target.value)}
                         >
-                          <option value="cliente">Cliente</option>
-                          <option value="usuario">Usuario</option>
-                          <option value="admin">Admin</option>
-                          <option value="superadmin">Superadmin</option>
+                          <option value="cliente">Cliente (Nivel 1)</option>
+                          <option value="usuario">Usuario (Nivel 2)</option>
+                          <option value="admin">Admin (Nivel 3)</option>
+                          <option value="superadmin">Superadmin (Máximo)</option>
                         </select>
                       </div>
                     )}

@@ -8,6 +8,8 @@ const LoginModal = ({ isOpen, onClose }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const { login, register, resetPassword } = useAuth();
@@ -18,7 +20,8 @@ const LoginModal = ({ isOpen, onClose }) => {
     setSuccess(null);
     try {
       if (mode === 'register') {
-        await register(email, password);
+        if (!fullName) throw new Error('El nombre completo es obligatorio.');
+        await register(email, password, { full_name: fullName, phone });
         setSuccess('Revisa tu email para confirmar el registro.');
       } else if (mode === 'login') {
         await login(email, password);
@@ -63,6 +66,33 @@ const LoginModal = ({ isOpen, onClose }) => {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === 'register' && (
+              <>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Nombre Completo</label>
+                  <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-slate-900"
+                    placeholder="Tu nombre"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Teléfono</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-slate-900"
+                    placeholder="+54 9..."
+                  />
+                </div>
+              </>
+            )}
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Email</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
@@ -74,8 +104,9 @@ const LoginModal = ({ isOpen, onClose }) => {
                   required
                 />
               </div>
-              
-              {mode !== 'forgot' && (
+            </div>
+            
+            {mode !== 'forgot' && (
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
