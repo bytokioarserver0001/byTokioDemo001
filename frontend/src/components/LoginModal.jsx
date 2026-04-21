@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const LoginModal = ({ isOpen, onClose }) => {
@@ -12,7 +13,15 @@ const LoginModal = ({ isOpen, onClose }) => {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const { login, register, resetPassword } = useAuth();
+  const { login, register, resetPassword, profile } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (profile?.role === 'superadmin' || profile?.role === 'admin') {
+      navigate('/admin');
+      onClose();
+    }
+  }, [profile, navigate, onClose]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
