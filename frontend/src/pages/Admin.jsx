@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { Shield, User, Star, Trash2, Save } from 'lucide-react';
+import { Shield, User, Star, Trash2, Save, X, Pencil } from 'lucide-react';
 
 const Admin = () => {
   const { profile } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editValues, setEditValues] = useState({});
 
   useEffect(() => {
     fetchUsers();
@@ -29,6 +31,35 @@ const Admin = () => {
     }
   };
 
+  const startEditing = (user) => {
+    setEditingId(user.id);
+    setEditValues({
+      full_name: user.full_name || '',
+      phone: user.phone || '',
+      role: user.role
+    });
+  };
+
+  const saveChanges = async (userId) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editValues.full_name,
+          phone: editValues.phone,
+          role: editValues.role
+        })
+        .eq('id', userId);
+      
+      if (error) throw error;
+      setEditingId(null);
+      fetchUsers();
+      alert('Información actualizada correctamente');
+    } catch (err) {
+      alert('Error al actualizar: ' + err.message);
+    }
+  };
+
   const updateRole = async (userId, newRole) => {
     try {
       const { error } = await supabase
@@ -38,7 +69,6 @@ const Admin = () => {
       
       if (error) throw error;
       fetchUsers();
-      alert('Rol actualizado con éxito');
     } catch (err) {
       alert('Error: ' + err.message);
     }
@@ -85,39 +115,88 @@ const Admin = () => {
                         <User size={20} />
                       </div>
                       <div>
-                        <div className="font-bold text-slate-800">{u.full_name || 'Sin nombre'}</div>
+                        {editingId === u.id ? (
+                          <input
+                            type="text"
+                            value={editValues.full_name}
+                            onChange={(e) => setEditValues({...editValues, full_name: e.target.value})}
+                            className="text-sm font-bold bg-white border border-slate-200 rounded-lg px-2 py-1 mb-1 w-full"
+                          />
+                        ) : (
+                          <div className="font-bold text-slate-800">{u.full_name || 'Sin nombre'}</div>
+                        )}
                         <div className="text-xs text-slate-400">{u.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <div className="text-sm text-slate-600">{u.phone || '—'}</div>
-                    <div className="text-[10px] text-slate-400 uppercase tracking-tighter">Teléfono</div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
-                      u.role === 'superadmin' ? 'bg-red-500 text-white' :
-                      u.role === 'admin' ? 'bg-primary-600 text-white' :
-                      'bg-slate-200 text-slate-700'
-                    }`}>
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="px-8 py-6">
-                    {profile.role === 'superadmin' && u.email !== profile.email && (
-                      <div className="flex items-center justify-center">
-                        <select 
-                          className="text-xs bg-white border-2 border-slate-100 rounded-xl px-4 py-2 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-bold text-slate-700 appearance-none cursor-pointer hover:border-primary-200"
-                          defaultValue={u.role}
-                          onChange={(e) => updateRole(u.id, e.target.value)}
-                        >
-                          <option value="cliente">Cliente (Nivel 1)</option>
-                          <option value="usuario">Usuario (Nivel 2)</option>
-                          <option value="admin">Admin (Nivel 3)</option>
-                          <option value="superadmin">Superadmin (Máximo)</option>
-                        </select>
-                      </div>
+                    {editingId === u.id ? (
+                      <input
+                        type="text"
+                        value={editValues.phone}
+                        onChange={(e) => setEditValues({...editValues, phone: e.target.value})}
+                        className="text-sm bg-white border border-slate-200 rounded-lg px-2 py-1 w-full"
+                      />
+                    ) : (
+                      <>
+                        <div className="text-sm text-slate-600">{u.phone || '—'}</div>
+                        <div className="text-[10px] text-slate-400 uppercase tracking-tighter">Teléfono</div>
+                      </>
                     )}
+                  </td>
+                  <td className="px-8 py-6">
+                    {editingId === u.id ? (
+                      <select 
+                        className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 w-full"
+                        value={editValues.role}
+                        onChange={(e) => setEditValues({...editValues, role: e.target.value})}
+                      >
+                        <option value="cliente">Cliente</option>
+                        <option value="usuario">Usuario</option>
+                        <option value="admin">Admin</option>
+                        <option value="superadmin">Superadmin</option>
+                      </select>
+                    ) : (
+                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
+                        u.role === 'superadmin' ? 'bg-red-500 text-white' :
+                        u.role === 'admin' ? 'bg-primary-600 text-white' :
+                        'bg-slate-200 text-slate-700'
+                      }`}>
+                        {u.role}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="flex items-center justify-center space-x-2">
+                      {editingId === u.id ? (
+                        <>
+                          <button 
+                            onClick={() => saveChanges(u.id)}
+                            className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm"
+                            title="Guardar cambios"
+                          >
+                            <Save size={16} />
+                          </button>
+                          <button 
+                            onClick={() => setEditingId(null)}
+                            className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 transition-colors"
+                            title="Cancelar"
+                          >
+                            <X size={16} />
+                          </button>
+                        </>
+                      ) : (
+                        profile.role === 'superadmin' && (
+                          <button 
+                            onClick={() => startEditing(u)}
+                            className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:bg-primary-500 hover:text-white transition-all shadow-sm opacity-0 group-hover:opacity-100"
+                            title="Editar información"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        )
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
