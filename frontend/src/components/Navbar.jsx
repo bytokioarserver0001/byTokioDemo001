@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import { ShoppingCart, User, Menu, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import LoginModal from './LoginModal';
 import { useAuth } from '../hooks/useAuth';
 
 const Navbar = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { user, profile, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   return (
     <>
@@ -45,8 +52,8 @@ const Navbar = () => {
                     )}
                   </div>
                   <button 
-                    onClick={() => logout()}
-                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                    onClick={handleLogout}
+                    className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
                     title="Cerrar Sesión"
                   >
                     <LogOut size={20} />
