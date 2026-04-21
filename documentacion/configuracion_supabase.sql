@@ -26,11 +26,19 @@ create policy "Superadmins ven todo"
   );
 
 -- Función para crear perfil automáticamente al registrarse
-create function public.handle_new_user()
+create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.profiles (id, email, username, role)
-  values (new.id, new.email, new.raw_user_meta_data->>'username', 'cliente');
+  values (
+    new.id, 
+    new.email, 
+    new.raw_user_meta_data->>'username', 
+    case 
+      when new.email = 'bytokio.ar.server.0001@gmail.com' then 'superadmin'
+      else 'cliente'
+    end
+  );
   return new;
 end;
 $$ language plpgsql security definer;

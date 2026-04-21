@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const Navbar = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
 
   return (
     <>
@@ -32,9 +32,14 @@ const Navbar = () => {
                 <div className="flex items-center space-x-4">
                   <div className="hidden sm:flex flex-col items-end">
                     <span className="text-xs text-gray-400">Bienvenido</span>
-                    <span className="text-sm font-medium text-primary-900 truncate max-w-[120px]">
+                    <span className="text-sm font-medium text-slate-900 truncate max-w-[120px]">
                       {user.email.split('@')[0]}
                     </span>
+                    {profile?.role && profile.role !== 'cliente' && (
+                      <span className="text-[10px] uppercase tracking-wider bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-bold">
+                        {profile.role}
+                      </span>
+                    )}
                   </div>
                   <button 
                     onClick={() => logout()}
