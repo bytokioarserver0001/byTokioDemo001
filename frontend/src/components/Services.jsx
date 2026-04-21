@@ -13,7 +13,7 @@ const iconMap = {
 
 const Services = () => {
   return (
-    <section id="experiencias" className="py-20 bg-gray-50/50">
+    <section id="experiencias" className="py-20 bg-slate-100/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-serif text-primary-950 mb-4">Nuestras Experiencias</h2>
@@ -30,7 +30,7 @@ const Services = () => {
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="bg-white p-8 rounded-3xl border border-gray-100 hover:border-primary-100 transition-all group"
+                className="bg-white/60 backdrop-blur-sm p-8 rounded-3xl border border-slate-200 hover:border-primary-300 transition-all group"
               >
                 <div className="w-12 h-12 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600 mb-6 group-hover:bg-primary-600 group-hover:text-white transition-colors">
                   <Icon size={24} />

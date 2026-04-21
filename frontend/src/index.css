@@ -5,22 +5,30 @@
   --font-serif: "Playfair Display", serif;
   --font-sans: "Outfit", sans-serif;
   
-  --color-primary-50: #FFF3ED;
-  --color-primary-100: #FEE3D6;
-  --color-primary-200: #FCC3AC;
-  --color-primary-300: #FA9A77;
-  --color-primary-400: #F76540;
-  --color-primary-500: #F54927;
-  --color-primary-600: #E62510;
-  --color-primary-700: #BE1810;
-  --color-primary-800: #971515;
-  --color-primary-900: #7A1514;
-  --color-primary-950: #420B09;
+  --color-slate-100: #E9E6E7;
+  --color-slate-900: #5E5653;
+  --color-primary-500: #6B7C98;
+  --color-primary-600: #5A6A85;
+  --color-accent-blue: #7B7F8A;
+  --color-neutral-taupe: #AB978C;
+  
+  /* Redefining primary scale based on the new palette */
+  --color-primary-50: #F1F4F9;
+  --color-primary-100: #E2E9F3;
+  --color-primary-200: #C5D3E7;
+  --color-primary-300: #A8BDDB;
+  --color-primary-400: #8BA7CF;
+  /* 500 is #6B7C98 */
+  --color-primary-700: #49566F;
+  --color-primary-800: #2C3543;
+  --color-primary-900: #0F1317;
 }
 
 :root {
   font-family: var(--font-sans);
   scroll-behavior: smooth;
+  background-color: var(--color-slate-100);
+  color: var(--color-slate-900);
 }
 
 h1, h2, h3, .font-serif {
