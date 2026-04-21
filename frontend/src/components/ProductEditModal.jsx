@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Package, DollarSign, Tag, Image, Save, Trash2, Eye, EyeOff } from 'lucide-react';
+import { X, Package, DollarSign, Tag, Image, Save, Trash2, Eye, EyeOff, Upload, Loader2 } from 'lucide-react';
 
 const ProductEditModal = ({ isOpen, onClose, product, onSave }) => {
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -36,6 +38,37 @@ const ProductEditModal = ({ isOpen, onClose, product, onSave }) => {
       setImageInput('');
     }
   }, [product]);
+
+  const handleFileUpload = async (event) => {
+    try {
+      setUploading(true);
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      const newImages = [...formData.images, publicUrl];
+      setFormData({ ...formData, images: newImages });
+      setImageInput(newImages.join(', '));
+      
+    } catch (error) {
+      alert('Error subiendo imagen: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -133,14 +166,33 @@ const ProductEditModal = ({ isOpen, onClose, product, onSave }) => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">URLs de Imágenes (Separadas por coma)</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Imagen del Producto (Subir archivo)</label>
+                  <div className="flex flex-col space-y-2">
+                    <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploading ? 'bg-slate-50 border-slate-200' : 'bg-slate-50 border-slate-200 hover:bg-slate-100 hover:border-primary-300'}`}>
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        {uploading ? (
+                          <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+                        ) : (
+                          <>
+                            <Upload className="w-8 h-8 text-slate-400 mb-2" />
+                            <p className="text-xs text-slate-500 font-bold">Haz clic para subir o arrastra</p>
+                          </>
+                        )}
+                      </div>
+                      <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">O pegar URLs manual (Separadas por coma)</label>
                   <div className="relative">
                     <Image className="absolute left-4 top-4 text-slate-300" size={18} />
                     <textarea
                       value={imageInput}
                       onChange={(e) => setImageInput(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-slate-900 font-medium min-h-[145px]"
-                      placeholder="https://images.com/foto1.jpg, https://..."
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-slate-900 font-medium min-h-[100px]"
+                      placeholder="https://images.com/foto1.jpg"
                     />
                   </div>
                 </div>

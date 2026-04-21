@@ -6,15 +6,18 @@ import { useCart } from '../context/CartContext';
 
 const ProductCard = ({ product }) => {
   const [currentImage, setCurrentImage] = useState(0);
+  const [imgError, setImgError] = useState(false);
   const { addToCart } = useCart();
 
   const nextImage = (e) => {
     e.stopPropagation();
+    setImgError(false);
     setCurrentImage((prev) => (prev + 1) % product.images.length);
   };
 
   const prevImage = (e) => {
     e.stopPropagation();
+    setImgError(false);
     setCurrentImage((prev) => (prev - 1 + product.images.length) % product.images.length);
   };
 
@@ -28,15 +31,23 @@ const ProductCard = ({ product }) => {
       {/* Carrusel de Imágenes */}
       <div className="aspect-[4/5] bg-slate-100 relative overflow-hidden">
         <AnimatePresence mode="wait">
-          <motion.img
-            key={currentImage}
-            src={product.images[currentImage] || 'https://via.placeholder.com/400x500?text=No+Image'}
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.5 }}
-            className="w-full h-full object-cover"
-          />
+          {!imgError && product.images?.[currentImage] ? (
+            <motion.img
+              key={currentImage}
+              src={product.images[currentImage]}
+              onError={() => setImgError(true)}
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.5 }}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-200">
+              <Star size={64} strokeWidth={1} />
+              <p className="text-[10px] uppercase tracking-widest font-black mt-4 opacity-50">Vista Previa No Disponible</p>
+            </div>
+          )}
         </AnimatePresence>
 
         {/* Controles del Carrusel */}
