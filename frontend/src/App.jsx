@@ -1,14 +1,18 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import CartDrawer from './components/CartDrawer'
 import Home from './pages/Home'
 import Admin from './pages/Admin'
+import { CartProvider } from './context/CartContext'
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen">
+    <CartProvider>
+      <Router>
+        <div className="min-h-screen">
         <Navbar />
+        <CartDrawer />
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -22,6 +26,7 @@ function App() {
         </footer>
       </div>
     </Router>
+  </CartProvider>
   )
 }
 

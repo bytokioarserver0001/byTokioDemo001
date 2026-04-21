@@ -3,10 +3,12 @@ import { ShoppingCart, User, Menu, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LoginModal from './LoginModal';
 import { useAuth } from '../hooks/useAuth';
+import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { user, profile, logout } = useAuth();
+  const { cartCount, setIsCartOpen } = useCart();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -33,9 +35,16 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-primary-600 transition-colors relative">
+              <button 
+                onClick={() => setIsCartOpen(true)}
+                className="p-2 text-gray-400 hover:text-primary-600 transition-colors relative"
+              >
                 <ShoppingCart size={20} />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-pink-500 rounded-full" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary-900 text-white text-[10px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-slate-100 animate-in zoom-in duration-300">
+                    {cartCount}
+                  </span>
+                )}
               </button>
 
               {user ? (

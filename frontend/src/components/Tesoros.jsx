@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 const ProductCard = ({ product }) => {
   const [currentImage, setCurrentImage] = useState(0);
+  const { addToCart } = useCart();
 
   const nextImage = (e) => {
     e.stopPropagation();
@@ -83,7 +85,10 @@ const ProductCard = ({ product }) => {
           {product.description}
         </p>
 
-        <button className="w-full bg-slate-900 text-white px-6 py-4 rounded-2xl font-bold flex items-center justify-center space-x-3 hover:bg-primary-900 transform active:scale-[0.98] transition-all shadow-xl shadow-slate-900/10">
+        <button 
+          onClick={() => addToCart(product)}
+          className="w-full bg-slate-900 text-white px-6 py-4 rounded-2xl font-bold flex items-center justify-center space-x-3 hover:bg-primary-900 transform active:scale-[0.98] transition-all shadow-xl shadow-slate-900/10"
+        >
           <ShoppingCart size={20} />
           <span>Añadir al Carrito</span>
         </button>
