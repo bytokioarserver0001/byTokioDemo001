@@ -310,16 +310,16 @@ const HeroEditor = () => {
                   onChange={e => setGeneralData(prev => ({...prev, title_font: e.target.value}))}
                   className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all text-slate-900 font-serif shadow-sm cursor-pointer"
                 >
+                  <option value="Outfit">Outfit (Sans-Serif)</option>
+                  <option value="Montserrat">Montserrat (Sans-Serif)</option>
+                  <option value="Inter">Inter (Sans-Serif)</option>
+                  <option value="Poppins">Poppins (Sans-Serif)</option>
                   <option value="Playfair Display">Playfair Display (Serif)</option>
                   <option value="Merriweather">Merriweather (Serif)</option>
-                  <option value="Montserrat">Montserrat (Sans-Serif)</option>
-                  <option value="Oswald">Oswald (Display)</option>
-                  <option value="Bebas Neue">Bebas Neue (Display)</option>
-                  <option value="Abril Fatface">Abril Fatface (Display)</option>
-                  <option value="Pacifico">Pacifico (Handwriting)</option>
-                  <option value="Cinzel">Cinzel (Serif)</option>
-                  <option value="Righteous">Righteous (Display)</option>
-                  <option value="Cormorant">Cormorant (Serif)</option>
+                  <option value="Lora">Lora (Serif)</option>
+                  <option value="Bebas Neue">Bebas Neue (Ornamental)</option>
+                  <option value="Abril Fatface">Abril Fatface (Ornamental)</option>
+                  <option value="Pacifico">Pacifico (Ornamental)</option>
                 </select>
               </div>
               
@@ -331,15 +331,15 @@ const HeroEditor = () => {
                   className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all text-slate-900 shadow-sm cursor-pointer"
                 >
                   <option value="Outfit">Outfit (Sans-Serif)</option>
+                  <option value="Montserrat">Montserrat (Sans-Serif)</option>
                   <option value="Inter">Inter (Sans-Serif)</option>
-                  <option value="Roboto">Roboto (Sans-Serif)</option>
-                  <option value="Open Sans">Open Sans (Sans-Serif)</option>
-                  <option value="Lato">Lato (Sans-Serif)</option>
-                  <option value="Nunito">Nunito (Sans-Serif)</option>
                   <option value="Poppins">Poppins (Sans-Serif)</option>
+                  <option value="Playfair Display">Playfair Display (Serif)</option>
+                  <option value="Merriweather">Merriweather (Serif)</option>
                   <option value="Lora">Lora (Serif)</option>
-                  <option value="PT Serif">PT Serif (Serif)</option>
-                  <option value="Quicksand">Quicksand (Sans-Serif)</option>
+                  <option value="Bebas Neue">Bebas Neue (Ornamental)</option>
+                  <option value="Abril Fatface">Abril Fatface (Ornamental)</option>
+                  <option value="Pacifico">Pacifico (Ornamental)</option>
                 </select>
               </div>
             </div>
