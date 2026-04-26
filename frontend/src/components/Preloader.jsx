@@ -6,42 +6,46 @@ const Preloader = () => {
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center"
+      className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center p-4"
     >
-      <div className="relative">
-        {/* Animated Rings */}
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          className="w-24 h-24 border-2 border-primary-100 rounded-full"
-        />
-        <motion.div
-          animate={{ rotate: -360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-0 w-24 h-24 border-t-2 border-primary-600 rounded-full"
-        />
+      <div className="flex flex-col items-center space-y-6">
+        <svg className="w-14 h-14 text-slate-400" viewBox="0 0 24 24">
+          <style>
+            {`
+              @keyframes ios-spinner {
+                0% { opacity: 1; }
+                100% { opacity: 0.15; }
+              }
+            `}
+          </style>
+          {Array.from({ length: 12 }).map((_, i) => (
+            <rect
+              key={i}
+              x="11"
+              y="1"
+              width="2"
+              height="6"
+              rx="1"
+              fill="currentColor"
+              style={{
+                transformOrigin: '12px 12px',
+                transform: `rotate(${i * 30}deg)`,
+                animation: 'ios-spinner 1.2s linear infinite',
+                animationDelay: `${(i - 12) * 0.1}s`
+              }}
+            />
+          ))}
+        </svg>
 
-        {/* Logo or Center Piece */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
-            className="text-primary-900 font-serif italic text-xl"
-          >
-            Tu Sitio
-          </motion.div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="text-slate-400 font-sans tracking-[0.2em] text-xs font-bold uppercase ml-2"
+        >
+          Cargando
+        </motion.div>
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="mt-8 text-primary-900/50 font-serif italic tracking-widest text-sm"
-      >
-        ingresando al sitio...
-      </motion.div>
     </motion.div>
   );
 };
