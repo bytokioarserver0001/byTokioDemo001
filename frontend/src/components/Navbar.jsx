@@ -19,7 +19,8 @@ const Navbar = () => {
   });
   const [sectionVisibilities, setSectionVisibilities] = useState({
     services: true,
-    productos: true
+    productos: true,
+    turnos: true
   });
 
   useEffect(() => {
@@ -41,11 +42,12 @@ const Navbar = () => {
         const { data } = await supabase
           .from('site_settings')
           .select('*')
-          .in('section', ['general', 'services_section', 'products_section']);
+          .in('section', ['general', 'services_section', 'products_section', 'turnos_section']);
         
         let logoTemp = { type: 'text', text: '', url: '' };
         let servTemp = true;
         let prodTemp = true;
+        let turnosTemp = true;
 
         if (data) {
           data.forEach(item => {
@@ -62,9 +64,12 @@ const Navbar = () => {
             if (item.section === 'products_section' && item.content) {
                prodTemp = item.content.is_visible !== false;
             }
+            if (item.section === 'turnos_section' && item.content) {
+               turnosTemp = item.content.is_visible !== false;
+            }
           });
           setLogoSettings(logoTemp);
-          setSectionVisibilities({ services: servTemp, productos: prodTemp });
+          setSectionVisibilities({ services: servTemp, productos: prodTemp, turnos: turnosTemp });
         }
       } catch (err) {
         console.error('Error loading nav settings:', err);
@@ -91,6 +96,7 @@ const Navbar = () => {
     { title: 'Inicio', href: '/' },
     ...(sectionVisibilities.services ? [{ title: 'Servicios', href: '#servicios' }] : []),
     ...(sectionVisibilities.productos ? [{ title: 'Productos', href: '#productos' }] : []),
+    ...(sectionVisibilities.turnos ? [{ title: 'Turnos', href: '#reserva' }] : []),
     { title: 'Contacto', href: '#contacto' },
   ];
 

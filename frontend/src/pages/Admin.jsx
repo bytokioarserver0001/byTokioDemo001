@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { Shield, User, Star, Trash2, Pencil, Plus, Package, Eye, Ban, CheckCircle, LayoutDashboard } from 'lucide-react';
+import { Shield, User, Star, Trash2, Pencil, Plus, Package, Eye, Ban, CheckCircle, LayoutDashboard, Calendar } from 'lucide-react';
 import UserEditModal from '../components/UserEditModal';
 import ProductEditModal from '../components/ProductEditModal';
 import HeroEditor from '../components/HeroEditor';
@@ -227,12 +227,41 @@ const Admin = () => {
             <LayoutDashboard size={18} />
             <span>Portada</span>
           </button>
+          <button 
+            onClick={() => setActiveTab('turnos')}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
+              activeTab === 'turnos' 
+                ? 'bg-white text-primary-900 shadow-md' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Calendar size={18} />
+            <span>Turnos</span>
+          </button>
         </div>
         </div>
       </div>
 
       {activeTab === 'portada' ? (
         <HeroEditor />
+      ) : activeTab === 'turnos' ? (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <h2 className="text-2xl font-serif text-slate-800 mb-6">Configuración de Turnos</h2>
+          <SectionEditor 
+            sectionName="turnos_section" 
+            defaultTitle="Encuentra tu momento"
+            defaultSubtitle="Consulta nuestra disponibilidad en tiempo real y reserva tu espacio de paz."
+          />
+          <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-slate-200 p-8 shadow-sm mt-2">
+            <div className="flex items-center space-x-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
+              <Calendar size={14} className="text-primary-500" />
+              <span>Integración Google Calendar</span>
+            </div>
+            <div className="h-48 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 italic text-sm">
+              Pendiente de conexión con Google Calendar...
+            </div>
+          </div>
+        </div>
       ) : activeTab === 'usuarios' ? (
         <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-slate-200 overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="overflow-x-auto">
