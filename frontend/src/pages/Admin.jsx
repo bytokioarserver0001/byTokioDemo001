@@ -5,6 +5,7 @@ import { Shield, User, Star, Trash2, Pencil, Plus, Package, Eye, Ban, CheckCircl
 import UserEditModal from '../components/UserEditModal';
 import ProductEditModal from '../components/ProductEditModal';
 import HeroEditor from '../components/HeroEditor';
+import SectionEditor from '../components/SectionEditor';
 
 const Admin = () => {
   const { profile } = useAuth();
@@ -337,6 +338,14 @@ const Admin = () => {
               <span>Nuevo {activeTab === 'servicios' ? 'Servicio' : 'Producto'}</span>
             </button>
           </div>
+
+          {activeTab === 'servicios' && (
+            <SectionEditor 
+              sectionName="services_section" 
+              defaultTitle="Nuestros Servicios"
+              defaultSubtitle="Selecciona un viaje diseñado para tu renovación." 
+            />
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.filter(p => activeTab === 'servicios' ? p.category === 'servicio' : p.category !== 'servicio').map((p) => (
