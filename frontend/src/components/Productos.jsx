@@ -26,10 +26,10 @@ const ProductCard = ({ product }) => {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col h-full"
+      className="bg-white rounded-[1.5rem] border border-slate-100 shadow-md shadow-slate-200/50 overflow-hidden group hover:shadow-xl transition-all duration-500 flex flex-col h-full"
     >
       {/* Carrusel de Imágenes */}
-      <div className="aspect-[4/5] bg-slate-100 relative overflow-hidden">
+      <div className="aspect-[3/2] bg-slate-100 relative overflow-hidden">
         <AnimatePresence mode="wait">
           {!imgError && product.images?.[currentImage] ? (
             <motion.img
@@ -75,33 +75,33 @@ const ProductCard = ({ product }) => {
         )}
 
         {/* Badge de Precio */}
-        <div className="absolute top-6 right-6 bg-slate-900/90 backdrop-blur-md text-white px-5 py-2 rounded-2xl text-lg font-serif border border-white/10 shadow-xl">
+        <div className="absolute top-3 right-3 bg-slate-900/90 backdrop-blur-md text-white px-3 py-1 rounded-xl text-sm font-serif border border-white/10 shadow-lg">
           ${product.price}
         </div>
       </div>
 
       {/* Info */}
-      <div className="p-8 flex flex-col flex-1 text-left">
-        <div className="flex items-center space-x-2 mb-3">
-          <span className="text-[10px] font-black uppercase tracking-widest text-primary-900 bg-primary-50 px-3 py-1 rounded-full border border-primary-100">
+      <div className="p-4 flex flex-col flex-1 text-left">
+        <div className="flex items-center space-x-2 mb-1.5">
+          <span className="text-[9px] font-black uppercase tracking-widest text-primary-900 bg-primary-50 px-2 py-0.5 rounded-full border border-primary-100">
             {product.category}
           </span>
         </div>
         
-        <h3 className="text-2xl font-serif text-slate-800 mb-3 group-hover:text-primary-900 transition-colors">
+        <h3 className="text-base font-serif text-slate-800 mb-1.5 group-hover:text-primary-900 transition-colors">
           {product.name}
         </h3>
         
-        <p className="text-slate-500 text-sm leading-relaxed mb-8 flex-1">
+        <p className="text-slate-500 text-xs leading-relaxed mb-4 flex-1">
           {product.description}
         </p>
 
         <button 
           onClick={() => addToCart(product)}
-          className="w-full bg-slate-900 text-white px-6 py-4 rounded-2xl font-bold flex items-center justify-center space-x-3 hover:bg-primary-900 transform active:scale-[0.98] transition-all shadow-xl shadow-slate-900/10"
+          className="w-full bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 hover:bg-primary-900 transform active:scale-[0.98] transition-all shadow-md shadow-slate-900/10"
         >
-          <ShoppingCart size={20} />
-          <span>Añadir al Carrito</span>
+          <ShoppingCart size={15} />
+          <span>Al Carrito</span>
         </button>
       </div>
     </motion.div>
@@ -174,13 +174,13 @@ const Productos = () => {
             <span className="text-xs font-black uppercase tracking-widest">Tienda Online Exclusiva</span>
             <Star size={16} fill="currentColor" />
           </motion.div>
-          <h2 className="text-5xl md:text-6xl font-serif text-slate-800 mb-6">{sectionData.title}</h2>
-          <p className="text-slate-500 max-w-2xl mx-auto italic text-lg">
+          <h2 className="text-3xl md:text-4xl font-serif text-slate-800 mb-3">{sectionData.title}</h2>
+          <p className="text-slate-500 max-w-2xl mx-auto italic">
             {sectionData.subtitle}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
