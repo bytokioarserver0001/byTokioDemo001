@@ -13,7 +13,9 @@ const HeroEditor = () => {
   const [generalData, setGeneralData] = useState({
     logo_type: 'text', // 'text' or 'image'
     logo_text: '',
-    logo_url: ''
+    logo_url: '',
+    title_font: 'Playfair Display',
+    body_font: 'Outfit'
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -58,7 +60,9 @@ const HeroEditor = () => {
         setGeneralData({
           logo_type: data.content.logo_type || 'text',
           logo_text: data.content.logo_text || '',
-          logo_url: data.content.logo_url || ''
+          logo_url: data.content.logo_url || '',
+          title_font: data.content.title_font || 'Playfair Display',
+          body_font: data.content.body_font || 'Outfit'
         });
       }
     } catch (err) {
@@ -291,10 +295,60 @@ const HeroEditor = () => {
             )}
           </div>
 
-          {/* Título principal */}
-          <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 p-8 shadow-2xl shadow-slate-200/50">
-            <label className="flex items-center space-x-3 text-[10px] font-black text-primary-900/40 uppercase tracking-[0.2em] mb-4">
+          {/* Fuentes del Sitio */}
+          <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 p-8 shadow-2xl shadow-slate-200/50 mt-8">
+            <label className="flex items-center space-x-3 text-[10px] font-black text-primary-900/40 uppercase tracking-[0.2em] mb-6">
               <Type size={14} className="text-primary-500" />
+              <span>Fuentes de Sitio</span>
+            </label>
+            
+            <div className="space-y-6">
+              <div>
+                <span className="text-xs font-bold text-slate-400 mb-2 block">Fuente para Títulos</span>
+                <select 
+                  value={generalData.title_font || 'Playfair Display'}
+                  onChange={e => setGeneralData(prev => ({...prev, title_font: e.target.value}))}
+                  className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all text-slate-900 font-serif shadow-sm cursor-pointer"
+                >
+                  <option value="Playfair Display">Playfair Display (Serif)</option>
+                  <option value="Merriweather">Merriweather (Serif)</option>
+                  <option value="Montserrat">Montserrat (Sans-Serif)</option>
+                  <option value="Oswald">Oswald (Display)</option>
+                  <option value="Bebas Neue">Bebas Neue (Display)</option>
+                  <option value="Abril Fatface">Abril Fatface (Display)</option>
+                  <option value="Pacifico">Pacifico (Handwriting)</option>
+                  <option value="Cinzel">Cinzel (Serif)</option>
+                  <option value="Righteous">Righteous (Display)</option>
+                  <option value="Cormorant">Cormorant (Serif)</option>
+                </select>
+              </div>
+              
+              <div>
+                <span className="text-xs font-bold text-slate-400 mb-2 block">Fuente para Textos / Subtítulos</span>
+                <select 
+                  value={generalData.body_font || 'Outfit'}
+                  onChange={e => setGeneralData(prev => ({...prev, body_font: e.target.value}))}
+                  className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all text-slate-900 shadow-sm cursor-pointer"
+                >
+                  <option value="Outfit">Outfit (Sans-Serif)</option>
+                  <option value="Inter">Inter (Sans-Serif)</option>
+                  <option value="Roboto">Roboto (Sans-Serif)</option>
+                  <option value="Open Sans">Open Sans (Sans-Serif)</option>
+                  <option value="Lato">Lato (Sans-Serif)</option>
+                  <option value="Nunito">Nunito (Sans-Serif)</option>
+                  <option value="Poppins">Poppins (Sans-Serif)</option>
+                  <option value="Lora">Lora (Serif)</option>
+                  <option value="PT Serif">PT Serif (Serif)</option>
+                  <option value="Quicksand">Quicksand (Sans-Serif)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Título principal */}
+          <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 p-8 shadow-2xl shadow-slate-200/50 mt-8">
+            <label className="flex items-center space-x-3 text-[10px] font-black text-primary-900/40 uppercase tracking-[0.2em] mb-4">
+              <AlignLeft size={14} className="text-primary-500" />
               <span>Contenido Textual</span>
             </label>
 
@@ -324,7 +378,7 @@ const HeroEditor = () => {
           </div>
 
           {/* Botones CTA */}
-          <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 p-8 shadow-2xl shadow-slate-200/50">
+          <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 p-8 shadow-2xl shadow-slate-200/50 mt-8">
             <label className="flex items-center space-x-3 text-[10px] font-black text-primary-900/40 uppercase tracking-[0.2em] mb-4">
               <MousePointerClick size={14} className="text-primary-500" />
               <span>Llamados a la Acción</span>
@@ -354,7 +408,7 @@ const HeroEditor = () => {
           </div>
 
           {/* Imágenes de fondo - Carrusel */}
-          <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 p-8 shadow-2xl shadow-slate-200/50">
+          <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 p-8 shadow-2xl shadow-slate-200/50 mt-8">
             <label className="flex items-center justify-between mb-6">
               <span className="flex items-center space-x-3 text-[10px] font-black text-primary-900/40 uppercase tracking-[0.2em]">
                 <Image size={14} className="text-primary-500" />
