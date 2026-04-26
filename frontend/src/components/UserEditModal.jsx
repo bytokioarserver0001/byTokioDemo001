@@ -2,10 +2,23 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Phone, Mail, Shield, Save } from 'lucide-react';
 
+// Format stored digits into display format
+const formatPhoneDisplay = (digits) => {
+  if (!digits) return '';
+  const d = digits.replace(/\D/g, '');
+  // d = 549XXXXXXXXXX (13 digits typical)
+  if (d.startsWith('549') && d.length >= 11) {
+    const area = d.slice(3, d.length - 8);
+    const num = d.slice(d.length - 8);
+    return `+54 9 ${area} ${num}`;
+  }
+  return d;
+};
+
 const UserEditModal = ({ isOpen, onClose, user, onSave }) => {
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
-    phone: user?.phone || '',
+    phone: formatPhoneDisplay(user?.phone || ''),
     role: user?.role || 'cliente'
   });
 
@@ -14,7 +27,7 @@ const UserEditModal = ({ isOpen, onClose, user, onSave }) => {
     if (user) {
       setFormData({
         full_name: user.full_name || '',
-        phone: user.phone || '',
+        phone: formatPhoneDisplay(user.phone || ''),
         role: user.role || 'cliente'
       });
     }
@@ -115,7 +128,11 @@ const UserEditModal = ({ isOpen, onClose, user, onSave }) => {
               Cancelar
             </button>
             <button
-              onClick={() => onSave(user.id, formData)}
+              onClick={() => {
+                // Strip to digits only before saving to DB
+                const phoneDigits = formData.phone.replace(/\D/g, '');
+                onSave(user.id, { ...formData, phone: phoneDigits });
+              }}
               className="flex-[2] bg-primary-900 text-white px-6 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center space-x-2 shadow-xl shadow-primary-900/10 font-serif"
             >
               <Save size={18} />

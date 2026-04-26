@@ -1,28 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { Shield, User, Star, Trash2, Save, X, Pencil, Plus, Package } from 'lucide-react';
+import { Shield, User, Star, Trash2, Pencil, Plus, Package, Eye, Ban, CheckCircle, LayoutDashboard } from 'lucide-react';
 import UserEditModal from '../components/UserEditModal';
 import ProductEditModal from '../components/ProductEditModal';
+import HeroEditor from '../components/HeroEditor';
 
 const Admin = () => {
   const { profile } = useAuth();
   const [users, setUsers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [activeTab, setActiveTab] = useState('usuarios'); // 'usuarios', 'tesoros'
+  const [activeTab, setActiveTab] = useState('usuarios'); // 'usuarios', 'Productos'
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   
   // Modals state
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-
-  useEffect(() => {
-    fetchUsers();
-    fetchProducts();
-  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -32,9 +27,9 @@ const Admin = () => {
         .order('role', { ascending: false });
       
       if (error) throw error;
-      setUsers(data);
+      setUsers(data || []);
     } catch (err) {
-      setError(err.message);
+      console.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -48,11 +43,19 @@ const Admin = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setProducts(data);
+      setProducts(data || []);
     } catch (err) {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    const init = async () => {
+      await fetchUsers();
+      await fetchProducts();
+    };
+    init();
+  }, []);
 
   // User Handlers
   const handleEditClick = (user) => {
@@ -79,9 +82,41 @@ const Admin = () => {
     }
   };
 
+  const handleBlockUser = async (u) => {
+    const isBlocked = u.role === 'bloqueado';
+    const msg = isBlocked
+      ? `¿Desbloquear a ${u.full_name || u.email}?`
+      : `¿Bloquear a ${u.full_name || u.email}? No podrá ingresar al sistema.`;
+    if (!window.confirm(msg)) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: isBlocked ? 'cliente' : 'bloqueado' })
+        .eq('id', u.id);
+      if (error) throw error;
+      fetchUsers();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  };
+
+  const handleDeleteUser = async (u) => {
+    if (!window.confirm(`¿Eliminar definitivamente a ${u.full_name || u.email}? Esta acción no tiene vuelta atrás.`)) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', u.id);
+      if (error) throw error;
+      fetchUsers();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  };
+
   // Product Handlers
   const handleAddProduct = () => {
-    setSelectedProduct(null);
+    setSelectedProduct({ category: activeTab === 'servicios' ? 'servicio' : 'general' });
     setIsProductModalOpen(true);
   };
 
@@ -133,11 +168,20 @@ const Admin = () => {
           </div>
           <div>
             <h1 className="text-4xl font-serif text-slate-900">Panel de Control</h1>
-            <p className="text-gray-500 italic">Gestión de usuarios y tesoros wellness.</p>
+            <p className="text-gray-500 italic">Gestión de usuarios y Productos wellness.</p>
           </div>
         </div>
 
-        <div className="flex bg-slate-100 p-1 rounded-2xl">
+        <div className="flex items-center space-x-4">
+          <button 
+            onClick={() => window.open('https://bytokiodemo.serverbytokio.duckdns.org', '_blank')}
+            className="flex items-center space-x-2 px-4 py-2 bg-white text-slate-600 hover:text-primary-900 rounded-xl border border-slate-100 shadow-sm transition-all font-bold text-sm"
+          >
+            <Eye size={18} />
+            <span>Ver Sitio</span>
+          </button>
+          
+          <div className="flex bg-slate-100 p-1 rounded-2xl">
           <button 
             onClick={() => setActiveTab('usuarios')}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
@@ -150,20 +194,45 @@ const Admin = () => {
             <span>Usuarios</span>
           </button>
           <button 
-            onClick={() => setActiveTab('tesoros')}
+            onClick={() => setActiveTab('productos')}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
-              activeTab === 'tesoros' 
+              activeTab === 'productos' 
                 ? 'bg-white text-primary-900 shadow-md' 
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             <Star size={18} />
-            <span>Tesoros</span>
+            <span>Productos</span>
           </button>
+          <button 
+            onClick={() => setActiveTab('servicios')}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
+              activeTab === 'servicios' 
+                ? 'bg-white text-primary-900 shadow-md' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Package size={18} />
+            <span>Servicios</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('portada')}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
+              activeTab === 'portada' 
+                ? 'bg-white text-primary-900 shadow-md' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <LayoutDashboard size={18} />
+            <span>Portada</span>
+          </button>
+        </div>
         </div>
       </div>
 
-      {activeTab === 'usuarios' ? (
+      {activeTab === 'portada' ? (
+        <HeroEditor />
+      ) : activeTab === 'usuarios' ? (
         <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-slate-200 overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -179,13 +248,16 @@ const Admin = () => {
               {users.map((u) => (
                 <tr 
                   key={u.id} 
-                  onClick={() => handleEditClick(u)}
-                  className="hover:bg-primary-50/30 transition-colors group cursor-pointer"
+                  className={`transition-colors group ${
+                    u.role === 'bloqueado' ? 'bg-red-50/40 opacity-70' : 'hover:bg-primary-50/30'
+                  }`}
                 >
                   <td className="px-8 py-6">
                     <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center text-slate-500 shadow-sm group-hover:from-primary-100 group-hover:to-primary-200 group-hover:text-primary-600 transition-all">
-                        <User size={20} />
+                      <div className={`w-10 h-10 bg-gradient-to-br rounded-2xl flex items-center justify-center shadow-sm transition-all ${
+                        u.role === 'bloqueado' ? 'from-red-100 to-red-200 text-red-500' : 'from-slate-100 to-slate-200 text-slate-500'
+                      }`}>
+                        {u.role === 'bloqueado' ? <Ban size={20} /> : <User size={20} />}
                       </div>
                       <div>
                         <div className="font-bold text-slate-800">{u.full_name || 'Sin nombre'}</div>
@@ -201,16 +273,48 @@ const Admin = () => {
                     <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
                       u.role === 'superadmin' ? 'bg-red-500 text-white' :
                       u.role === 'admin' ? 'bg-primary-600 text-white' :
+                      u.role === 'bloqueado' ? 'bg-red-200 text-red-700' :
+                      u.role === 'cliente' ? 'bg-green-100 text-green-700' :
+                      u.role === 'usuario' ? 'bg-orange-100 text-orange-700' :
                       'bg-slate-200 text-slate-700'
                     }`}>
                       {u.role}
                     </span>
                   </td>
                   <td className="px-8 py-6">
-                    <div className="flex items-center justify-center">
-                      <div className="p-2 bg-slate-100 text-slate-500 rounded-lg group-hover:bg-primary-500 group-hover:text-white transition-all shadow-sm">
-                        <Pencil size={16} />
-                      </div>
+                    <div className="flex items-center justify-center gap-2">
+                      {/* Editar */}
+                      <button
+                        onClick={() => handleEditClick(u)}
+                        title="Editar usuario"
+                        className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:bg-primary-500 hover:text-white transition-all shadow-sm"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      {/* Bloquear / Desbloquear */}
+                      {profile?.role === 'superadmin' && u.role !== 'superadmin' && (
+                        <button
+                          onClick={() => handleBlockUser(u)}
+                          title={u.role === 'bloqueado' ? 'Desbloquear usuario' : 'Bloquear usuario'}
+                          className={`p-2 rounded-lg transition-all shadow-sm ${
+                            u.role === 'bloqueado'
+                              ? 'bg-green-100 text-green-600 hover:bg-green-500 hover:text-white'
+                              : 'bg-amber-100 text-amber-600 hover:bg-amber-500 hover:text-white'
+                          }`}
+                        >
+                          {u.role === 'bloqueado' ? <CheckCircle size={15} /> : <Ban size={15} />}
+                        </button>
+                      )}
+                      {/* Eliminar */}
+                      {profile?.role === 'superadmin' && u.role !== 'superadmin' && (
+                        <button
+                          onClick={() => handleDeleteUser(u)}
+                          title="Eliminar usuario"
+                          className="p-2 bg-red-100 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -222,18 +326,21 @@ const Admin = () => {
       ) : (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-serif text-slate-800">Inventario de Tesoros</h2>
+            <h2 className="text-2xl font-serif text-slate-800">
+              Inventario de {activeTab === 'servicios' ? 'Servicios' : 'Productos'}
+            </h2>
             <button 
               onClick={() => handleAddProduct()}
               className="bg-primary-900 text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 hover:bg-slate-800 transition-all shadow-lg"
             >
               <Plus size={18} />
-              <span>Nuevo Producto</span>
+              <span>Nuevo {activeTab === 'servicios' ? 'Servicio' : 'Producto'}</span>
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((p) => (
+            {products.filter(p => activeTab === 'servicios' ? p.category === 'servicio' : p.category !== 'servicio').map((p) => (
+
               <div key={p.id} className="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden group hover:shadow-2xl transition-all">
                 <div className="aspect-video bg-slate-100 overflow-hidden relative">
                   {p.images?.[0] ? (

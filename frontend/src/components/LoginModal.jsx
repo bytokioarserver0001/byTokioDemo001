@@ -30,8 +30,14 @@ const LoginModal = ({ isOpen, onClose }) => {
     try {
       if (mode === 'register') {
         if (!fullName) throw new Error('El nombre completo es obligatorio.');
-        await register(email, password, { full_name: fullName, phone });
-        setSuccess('Revisa tu email para confirmar el registro.');
+        if (!phone) throw new Error('El teléfono es obligatorio.');
+        // Validate: must start with +54 9 and have 8-12 digits after
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (!phone.trim().startsWith('+54') || !phoneDigits.startsWith('549') || phoneDigits.length < 11 || phoneDigits.length > 15) {
+          throw new Error('El teléfono debe comenzar con +54 9 seguido de código de área y número (ej: +54 9 11 12345678)');
+        }
+        await register(email, password, { full_name: fullName, phone: phoneDigits });
+        setSuccess('¡Registro exitoso! Revisa tu email para confirmar tu cuenta antes de ingresar.');
       } else if (mode === 'login') {
         await login(email, password);
         onClose();
@@ -42,6 +48,15 @@ const LoginModal = ({ isOpen, onClose }) => {
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const handlePhoneChange = (e) => {
+    let val = e.target.value;
+    // Auto-insert prefix if user starts fresh
+    if (!val.startsWith('+54 9 ')) {
+      val = '+54 9 ' + val.replace(/^\+?54\s*9?\s*/, '');
+    }
+    setPhone(val);
   };
 
   if (!isOpen) return null;
@@ -89,14 +104,17 @@ const LoginModal = ({ isOpen, onClose }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Teléfono</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Teléfono <span className="text-red-400">*</span></label>
                   <input
                     type="tel"
+                    required
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-slate-900"
-                    placeholder="+54 9..."
+                    onFocus={() => { if (!phone) setPhone('+54 9 '); }}
+                    onChange={handlePhoneChange}
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-slate-900 font-mono"
+                    placeholder="+54 9 11 12345678"
                   />
+                  <p className="text-[10px] text-slate-400 mt-1 ml-1">Formato: +54 9 [código área] [número] — ej: +54 9 11 12345678</p>
                 </div>
               </>
             )}

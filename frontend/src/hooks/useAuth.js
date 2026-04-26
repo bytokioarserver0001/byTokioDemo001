@@ -51,15 +51,22 @@ export const useAuth = () => {
   }, []);
 
   const login = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    if (!data.user?.email_confirmed_at) {
+      await supabase.auth.signOut();
+      throw new Error('Debes confirmar tu email antes de ingresar. Revisa tu bandeja de entrada.');
+    }
   };
 
   const register = async (email, password, metadata = {}) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: metadata }
+      options: { 
+        data: metadata,
+        emailRedirectTo: window.location.origin
+      }
     });
     if (error) throw error;
   };

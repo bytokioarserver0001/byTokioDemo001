@@ -1,14 +1,14 @@
 import React from 'react'
 import Hero from '../components/Hero'
 import Services from '../components/Services'
-import Tesoros from '../components/Tesoros'
+import Productos from '../components/Productos'
 
 const Home = () => {
   return (
     <>
       <Hero />
       <Services />
-      <Tesoros />
+      <Productos />
 
       <section id="reserva" className="py-20 bg-primary-900 text-white overflow-hidden relative">
         <div className="max-w-7xl mx-auto px-4 text-center relative z-10">

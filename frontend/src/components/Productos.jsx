@@ -108,7 +108,7 @@ const ProductCard = ({ product }) => {
   );
 };
 
-const Tesoros = () => {
+const Productos = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -118,6 +118,7 @@ const Tesoros = () => {
         .from('products')
         .select('*')
         .eq('is_active', true)
+        .neq('category', 'servicio')
         .order('created_at', { ascending: false });
       
       if (!error && data) {
@@ -132,14 +133,14 @@ const Tesoros = () => {
   if (loading) return (
     <div className="py-20 text-center animate-pulse">
       <div className="w-12 h-12 bg-slate-100 rounded-full mx-auto mb-4" />
-      <p className="text-slate-400 font-serif italic text-xl">Descubriendo tesoros wellness...</p>
+      <p className="text-slate-400 font-serif italic text-xl">Descubriendo Productos wellness...</p>
     </div>
   );
 
   if (products.length === 0) return null;
 
   return (
-    <section id="tesoros" className="py-32 bg-slate-50 relative overflow-hidden">
+    <section id="Productos" className="py-32 bg-slate-50 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="text-center mb-20">
           <motion.div
@@ -151,7 +152,7 @@ const Tesoros = () => {
             <span className="text-xs font-black uppercase tracking-widest">Tienda Curada</span>
             <Star size={16} fill="currentColor" />
           </motion.div>
-          <h2 className="text-5xl md:text-6xl font-serif text-slate-800 mb-6">Tesoros de Bienestar</h2>
+          <h2 className="text-5xl md:text-6xl font-serif text-slate-800 mb-6">Productos de Bienestar</h2>
           <p className="text-slate-500 max-w-2xl mx-auto italic text-lg">
             Una selección exclusiva de productos diseñados para prolongar tu experiencia Zen en casa.
           </p>
@@ -171,4 +172,4 @@ const Tesoros = () => {
   );
 };
 
-export default Tesoros;
+export default Productos;

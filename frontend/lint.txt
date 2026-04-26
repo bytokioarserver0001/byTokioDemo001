@@ -1,0 +1,180 @@
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\components\CartDrawer.jsx[24m[0m
+[0m  [2m2:10[22m  [31merror[39m  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  [2mno-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\components\Hero.jsx[24m[0m
+[0m   [2m2:10[22m  [31merror[39m  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  [2mno-unused-vars[22m[0m
+[0m  [2m36:16[22m  [31merror[39m  'err' is defined but never used                                                [2mno-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\components\HeroEditor.jsx[24m[0m
+[0m   [2m25:5[22m  [31merror[39m  Error: Cannot access variable before it is declared[0m
+[0m[0m
+[0m`fetchHeroSettings` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.[0m
+[0m[0m
+[0m  23 |[0m
+[0m  24 |   useEffect(() => {[0m
+[0m> 25 |     fetchHeroSettings();[0m
+[0m     |     ^^^^^^^^^^^^^^^^^ `fetchHeroSettings` accessed before it is declared[0m
+[0m  26 |     fetchGeneralSettings();[0m
+[0m  27 |   }, []);[0m
+[0m  28 |[0m
+[0m[0m
+[0m  36 |   }, [heroData.bg_images.length]);[0m
+[0m  37 |[0m
+[0m> 38 |   const fetchHeroSettings = async () => {[0m
+[0m     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 39 |     try {[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 40 |       const { data, error } = await supabase[0m
+[0m     …[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 60 |     }[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 61 |   };[0m
+[0m     | ^^^^^ `fetchHeroSettings` is declared here[0m
+[0m  62 |[0m
+[0m  63 |   const fetchGeneralSettings = async () => {[0m
+[0m  64 |     try {                                          [2mreact-hooks/immutability[22m[0m
+[0m   [2m26:5[22m  [31merror[39m  Error: Cannot access variable before it is declared[0m
+[0m[0m
+[0m`fetchGeneralSettings` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.[0m
+[0m[0m
+[0m  24 |   useEffect(() => {[0m
+[0m  25 |     fetchHeroSettings();[0m
+[0m> 26 |     fetchGeneralSettings();[0m
+[0m     |     ^^^^^^^^^^^^^^^^^^^^ `fetchGeneralSettings` accessed before it is declared[0m
+[0m  27 |   }, []);[0m
+[0m  28 |[0m
+[0m  29 |   // Auto-rotate preview[0m
+[0m[0m
+[0m  61 |   };[0m
+[0m  62 |[0m
+[0m> 63 |   const fetchGeneralSettings = async () => {[0m
+[0m     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 64 |     try {[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 65 |       const { data } = await supabase[0m
+[0m     …[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 80 |     }[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 81 |   };[0m
+[0m     | ^^^^^ `fetchGeneralSettings` is declared here[0m
+[0m  82 |[0m
+[0m  83 |   const handleImageUpload = async (e) => {[0m
+[0m  84 |     const files = Array.from(e.target.files);  [2mreact-hooks/immutability[22m[0m
+[0m  [2m201:9[22m  [31merror[39m  'currentPreviewImg' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               [2mno-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\components\LoginModal.jsx[24m[0m
+[0m  [2m2:10[22m  [31merror[39m  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  [2mno-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\components\Navbar.jsx[24m[0m
+[0m  [2m36:16[22m  [31merror[39m  'err' is defined but never used  [2mno-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\components\ProductEditModal.jsx[24m[0m
+[0m   [2m3:10[22m  [31merror[39m  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             [2mno-unused-vars[22m[0m
+[0m  [2m20:7[22m   [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0m  18 |   useEffect(() => {[0m
+[0m  19 |     if (product) {[0m
+[0m> 20 |       setFormData({[0m
+[0m     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  21 |         name: product.name || '',[0m
+[0m  22 |         description: product.description || '',[0m
+[0m  23 |         price: product.price || 0,  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\components\Productos.jsx[24m[0m
+[0m  [2m3:10[22m  [31merror[39m  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  [2mno-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\components\Services.jsx[24m[0m
+[0m  [2m2:10[22m  [31merror[39m  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  [2mno-unused-vars[22m[0m
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\components\UserEditModal.jsx[24m[0m
+[0m   [2m2:10[22m  [31merror[39m  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2mno-unused-vars[22m[0m
+[0m  [2m28:7[22m   [31merror[39m  Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0m  26 |   React.useEffect(() => {[0m
+[0m  27 |     if (user) {[0m
+[0m> 28 |       setFormData({[0m
+[0m     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  29 |         full_name: user.full_name || '',[0m
+[0m  30 |         phone: formatPhoneDisplay(user.phone || ''),[0m
+[0m  31 |         role: user.role || 'cliente'  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\context\CartContext.jsx[24m[0m
+[0m  [2m5:14[22m  [31merror[39m  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  [2mreact-refresh/only-export-components[22m[0m
+[0m[0m
+[0m[4mC:\inetpub\wwwroot\LocalUser\japo\sitios\12_SITEDEMO_001\frontend\src\pages\Admin.jsx[24m[0m
+[0m  [2m12:9[22m   [31merror[39m  'navigate' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 [2mno-unused-vars[22m[0m
+[0m  [2m17:10[22m  [31merror[39m  'error' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    [2mno-unused-vars[22m[0m
+[0m  [2m26:5[22m   [31merror[39m  Error: Cannot access variable before it is declared[0m
+[0m[0m
+[0m`fetchUsers` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.[0m
+[0m[0m
+[0m  24 |[0m
+[0m  25 |   useEffect(() => {[0m
+[0m> 26 |     fetchUsers();[0m
+[0m     |     ^^^^^^^^^^ `fetchUsers` accessed before it is declared[0m
+[0m  27 |     fetchProducts();[0m
+[0m  28 |   }, []);[0m
+[0m  29 |[0m
+[0m[0m
+[0m  28 |   }, []);[0m
+[0m  29 |[0m
+[0m> 30 |   const fetchUsers = async () => {[0m
+[0m     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 31 |     try {[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 32 |       const { data, error } = await supabase[0m
+[0m     …[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 43 |     }[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 44 |   };[0m
+[0m     | ^^^^^ `fetchUsers` is declared here[0m
+[0m  45 |[0m
+[0m  46 |   const fetchProducts = async () => {[0m
+[0m  47 |     try {                                                           [2mreact-hooks/immutability[22m[0m
+[0m  [2m27:5[22m   [31merror[39m  Error: Cannot access variable before it is declared[0m
+[0m[0m
+[0m`fetchProducts` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.[0m
+[0m[0m
+[0m  25 |   useEffect(() => {[0m
+[0m  26 |     fetchUsers();[0m
+[0m> 27 |     fetchProducts();[0m
+[0m     |     ^^^^^^^^^^^^^ `fetchProducts` accessed before it is declared[0m
+[0m  28 |   }, []);[0m
+[0m  29 |[0m
+[0m  30 |   const fetchUsers = async () => {[0m
+[0m[0m
+[0m  44 |   };[0m
+[0m  45 |[0m
+[0m> 46 |   const fetchProducts = async () => {[0m
+[0m     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[0m> 47 |     try {[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 48 |       const { data, error } = await supabase[0m
+[0m     …[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 57 |     }[0m
+[0m     | ^^^^^^^^^[0m
+[0m> 58 |   };[0m
+[0m     | ^^^^^ `fetchProducts` is declared here[0m
+[0m  59 |[0m
+[0m  60 |   // User Handlers[0m
+[0m  61 |   const handleEditClick = (user) => {  [2mreact-hooks/immutability[22m[0m
+[0m[0m
+[0m[31m[1m✖ 19 problems (19 errors, 0 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[0m

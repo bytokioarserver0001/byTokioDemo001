@@ -108,7 +108,7 @@ const ProductEditModal = ({ isOpen, onClose, product, onSave }) => {
                 <Package size={28} />
               </div>
               <div>
-                <h3 className="text-2xl font-serif">{product ? 'Editar Tesoro' : 'Nuevo Tesoro'}</h3>
+                <h3 className="text-2xl font-serif">{product ? 'Editar Producto' : 'Nuevo Producto'}</h3>
                 <p className="text-slate-400 text-sm">Gestiona la información del producto.</p>
               </div>
             </div>
@@ -155,6 +155,7 @@ const ProductEditModal = ({ isOpen, onClose, product, onSave }) => {
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-slate-900 font-medium"
                   >
+                    <option value="servicio">Servicio (Agendable)</option>
                     <option value="general">General</option>
                     <option value="masajes">Masajes</option>
                     <option value="esencias">Esencias</option>
@@ -219,7 +220,7 @@ const ProductEditModal = ({ isOpen, onClose, product, onSave }) => {
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-slate-900 font-medium min-h-[100px]"
-                placeholder="Describe los beneficios y características de este tesoro..."
+                placeholder="Describe los beneficios y características de este Producto..."
               />
             </div>
           </div>
