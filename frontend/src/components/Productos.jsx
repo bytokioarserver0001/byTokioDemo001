@@ -29,7 +29,7 @@ const ProductCard = ({ product }) => {
       className="bg-white rounded-[1.5rem] border border-slate-100 shadow-md shadow-slate-200/50 overflow-hidden group hover:shadow-xl transition-all duration-500 flex flex-col h-full"
     >
       {/* Carrusel de Imágenes */}
-      <div className="aspect-[3/2] bg-slate-100 relative overflow-hidden">
+      <div className="aspect-[3/2] bg-white relative overflow-hidden">
         <AnimatePresence mode="wait">
           {!imgError && product.images?.[currentImage] ? (
             <motion.img
@@ -40,7 +40,7 @@ const ProductCard = ({ product }) => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.5 }}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain p-2"
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 text-slate-200">
