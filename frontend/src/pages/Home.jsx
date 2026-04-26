@@ -2,6 +2,7 @@ import React from 'react'
 import Hero from '../components/Hero'
 import Services from '../components/Services'
 import Productos from '../components/Productos'
+import Contacto from '../components/Contacto'
 
 const Home = () => {
   return (
@@ -24,6 +25,8 @@ const Home = () => {
         
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary-500/20 via-transparent to-transparent" />
       </section>
+
+      <Contacto />
     </>
   )
 }

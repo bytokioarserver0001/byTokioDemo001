@@ -17,6 +17,10 @@ const Navbar = () => {
     text: '',
     url: ''
   });
+  const [sectionVisibilities, setSectionVisibilities] = useState({
+    services: true,
+    productos: true
+  });
 
   useEffect(() => {
     // Escuchar cambios de autenticación
@@ -32,27 +36,42 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    const fetchLogoSettings = async () => {
+    const fetchSections = async () => {
       try {
         const { data } = await supabase
           .from('site_settings')
           .select('*')
-          .eq('section', 'general')
-          .single();
+          .in('section', ['general', 'services_section', 'products_section']);
+        
+        let logoTemp = { type: 'text', text: '', url: '' };
+        let servTemp = true;
+        let prodTemp = true;
 
-        if (data?.content) {
-          setLogoSettings({
-            type: data.content.logo_type || 'text',
-            text: data.content.logo_text || '',
-            url: data.content.logo_url || ''
+        if (data) {
+          data.forEach(item => {
+            if (item.section === 'general' && item.content) {
+               logoTemp = {
+                 type: item.content.logo_type || 'text',
+                 text: item.content.logo_text || '',
+                 url: item.content.logo_url || ''
+               };
+            }
+            if (item.section === 'services_section' && item.content) {
+               servTemp = item.content.is_visible !== false;
+            }
+            if (item.section === 'products_section' && item.content) {
+               prodTemp = item.content.is_visible !== false;
+            }
           });
+          setLogoSettings(logoTemp);
+          setSectionVisibilities({ services: servTemp, productos: prodTemp });
         }
       } catch (err) {
-        console.error('Error loading logo settings:', err);
+        console.error('Error loading nav settings:', err);
       }
     };
 
-    fetchLogoSettings();
+    fetchSections();
   }, []);
 
   useEffect(() => {
@@ -70,8 +89,8 @@ const Navbar = () => {
 
   const menuItems = [
     { title: 'Inicio', href: '/' },
-    { title: 'Servicios', href: '#servicios' },
-    { title: 'Productos', href: '#productos' },
+    ...(sectionVisibilities.services ? [{ title: 'Servicios', href: '#servicios' }] : []),
+    ...(sectionVisibilities.productos ? [{ title: 'Productos', href: '#productos' }] : []),
     { title: 'Contacto', href: '#contacto' },
   ];
 
