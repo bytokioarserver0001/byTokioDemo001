@@ -347,6 +347,14 @@ const Admin = () => {
             />
           )}
 
+          {activeTab === 'productos' && (
+            <SectionEditor 
+              sectionName="products_section" 
+              defaultTitle="Productos de Bienestar"
+              defaultSubtitle="Una selección exclusiva de productos diseñados para prolongar tu experiencia Zen en casa." 
+            />
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.filter(p => activeTab === 'servicios' ? p.category === 'servicio' : p.category !== 'servicio').map((p) => (
 

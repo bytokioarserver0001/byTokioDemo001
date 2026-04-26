@@ -110,20 +110,36 @@ const ProductCard = ({ product }) => {
 
 const Productos = () => {
   const [products, setProducts] = useState([]);
+  const [sectionData, setSectionData] = useState({ title: 'Productos de Bienestar', subtitle: 'Una selección exclusiva de productos diseñados para prolongar tu experiencia Zen en casa.' });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .neq('category', 'servicio')
-        .order('created_at', { ascending: false });
-      
-      if (!error && data) {
-        setProducts(data);
+      const [productsRes, settingsRes] = await Promise.all([
+        supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true)
+          .neq('category', 'servicio')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('site_settings')
+          .select('content')
+          .eq('section', 'products_section')
+          .single()
+      ]);
+
+      if (!productsRes.error && productsRes.data) {
+        setProducts(productsRes.data);
       }
+      
+      if (settingsRes.data?.content) {
+        setSectionData({
+          title: settingsRes.data.content.title || 'Productos de Bienestar',
+          subtitle: settingsRes.data.content.subtitle || 'Una selección exclusiva de productos diseñados para prolongar tu experiencia Zen en casa.'
+        });
+      }
+
       setLoading(false);
     };
 
@@ -149,12 +165,12 @@ const Productos = () => {
             className="flex items-center justify-center space-x-2 text-primary-900 mb-4"
           >
             <Star size={16} fill="currentColor" />
-            <span className="text-xs font-black uppercase tracking-widest">Tienda Curada</span>
+            <span className="text-xs font-black uppercase tracking-widest">Tienda Online Exclusiva</span>
             <Star size={16} fill="currentColor" />
           </motion.div>
-          <h2 className="text-5xl md:text-6xl font-serif text-slate-800 mb-6">Productos de Bienestar</h2>
+          <h2 className="text-5xl md:text-6xl font-serif text-slate-800 mb-6">{sectionData.title}</h2>
           <p className="text-slate-500 max-w-2xl mx-auto italic text-lg">
-            Una selección exclusiva de productos diseñados para prolongar tu experiencia Zen en casa.
+            {sectionData.subtitle}
           </p>
         </div>
 
