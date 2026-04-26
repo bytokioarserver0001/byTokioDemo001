@@ -87,6 +87,27 @@ const HeroEditor = () => {
     return () => clearInterval(timer);
   }, [heroData.bg_images.length]);
 
+  // Preview dinámico de fuentes
+  useEffect(() => {
+    if (!generalData.title_font || !generalData.body_font) return;
+    
+    const titleUrl = generalData.title_font.replace(/ /g, '+');
+    const bodyUrl = generalData.body_font.replace(/ /g, '+');
+    
+    const linkId = 'preview-site-fonts';
+    let fontLink = document.getElementById(linkId);
+    if (!fontLink) {
+      fontLink = document.createElement('link');
+      fontLink.id = linkId;
+      fontLink.rel = 'stylesheet';
+      document.head.appendChild(fontLink);
+    }
+    fontLink.href = `https://fonts.googleapis.com/css?family=${titleUrl}:300,400,600,700|${bodyUrl}:300,400,600,700&display=swap`;
+    
+    document.documentElement.style.setProperty('--font-serif', `"${generalData.title_font}", serif`);
+    document.documentElement.style.setProperty('--font-sans', `"${generalData.body_font}", sans-serif`);
+  }, [generalData.title_font, generalData.body_font]);
+
 
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
