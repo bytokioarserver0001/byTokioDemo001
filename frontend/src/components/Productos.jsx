@@ -1,10 +1,95 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { ShoppingCart, ChevronLeft, ChevronRight, Star, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
-const ProductCard = ({ product }) => {
+const ProductModal = ({ product, onClose }) => {
+  const [currentImage, setCurrentImage] = useState(0);
+  const { addToCart } = useCart();
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          onClick={(e) => e.stopPropagation()}
+          className="bg-white rounded-3xl overflow-hidden shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col"
+        >
+          {/* Image area */}
+          <div className="relative bg-white flex-shrink-0">
+            <div className="aspect-square p-6">
+              <img
+                src={product.images?.[currentImage]}
+                alt={product.name}
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
+            >
+              <X size={18} className="text-slate-600" />
+            </button>
+
+            {/* Price badge */}
+            <div className="absolute top-4 left-4 bg-slate-900 text-white px-4 py-1.5 rounded-xl text-base font-serif shadow">
+              ${product.price}
+            </div>
+
+            {/* Image nav */}
+            {product.images?.length > 1 && (
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-4">
+                <button onClick={() => setCurrentImage(p => (p - 1 + product.images.length) % product.images.length)} className="p-1.5 bg-white rounded-full shadow">
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="text-xs text-slate-400">{currentImage + 1} / {product.images.length}</span>
+                <button onClick={() => setCurrentImage(p => (p + 1) % product.images.length)} className="p-1.5 bg-white rounded-full shadow">
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Info */}
+          <div className="p-6 border-t border-slate-100 overflow-y-auto">
+            <span className="text-[9px] font-black uppercase tracking-widest text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full border border-primary-100">
+              {product.category}
+            </span>
+            <h2 className="text-2xl font-serif text-slate-800 mt-3 mb-2">{product.name}</h2>
+            <p className="text-slate-500 text-sm leading-relaxed mb-6">{product.description}</p>
+            <button
+              onClick={() => { addToCart(product); onClose(); }}
+              className="w-full bg-slate-900 text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-primary-900 transition-colors shadow-lg"
+            >
+              <ShoppingCart size={18} />
+              <span>Añadir al Carrito</span>
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+const ProductCard = ({ product, onClick }) => {
   const [currentImage, setCurrentImage] = useState(0);
   const [imgError, setImgError] = useState(false);
   const { addToCart } = useCart();
@@ -26,7 +111,8 @@ const ProductCard = ({ product }) => {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-white rounded-[1.5rem] border border-slate-100 shadow-md shadow-slate-200/50 overflow-hidden group hover:shadow-xl transition-all duration-500 flex flex-col h-full"
+      onClick={onClick}
+      className="bg-white rounded-[1.5rem] border border-slate-100 shadow-md shadow-slate-200/50 overflow-hidden group hover:shadow-xl transition-all duration-500 flex flex-col h-full cursor-pointer"
     >
       {/* Carrusel de Imágenes */}
       <div className="aspect-[3/2] bg-white relative overflow-hidden">
@@ -116,6 +202,7 @@ const Productos = () => {
     is_visible: true
   });
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -182,14 +269,23 @@ const Productos = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard 
+              key={product.id} 
+              product={product}
+              onClick={() => setSelectedProduct(product)}
+            />
           ))}
         </div>
       </div>
-      
+
       {/* Decoración de fondo */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-100/30 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-slate-200/30 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2" />
+
+      {/* Modal */}
+      {selectedProduct && (
+        <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+      )}
     </section>
   );
 };
