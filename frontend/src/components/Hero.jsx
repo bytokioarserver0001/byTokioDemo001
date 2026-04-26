@@ -148,16 +148,21 @@ const Hero = () => {
             {hero.subtitle}
           </motion.p>
           <div className="flex flex-wrap justify-center gap-5">
-            <button className="px-10 py-5 bg-primary-600 text-white rounded-2xl font-bold shadow-2xl shadow-primary-900/20 hover:bg-primary-700 hover:scale-105 active:scale-95 transition-all">
+            <a 
+              href="#reserva"
+              className="px-10 py-5 bg-primary-600 inline-block text-white rounded-2xl font-bold shadow-2xl shadow-primary-900/20 hover:bg-primary-700 hover:scale-105 active:scale-95 transition-all"
+            >
               {hero.cta_text}
-            </button>
-            <button className={`px-10 py-5 rounded-2xl font-bold transition-all hover:scale-105 active:scale-95 ${
+            </a>
+            <a 
+              href="#servicios"
+              className={`px-10 py-5 inline-block rounded-2xl font-bold transition-all hover:scale-105 active:scale-95 ${
               hasImages 
                 ? 'bg-white/10 border border-white/30 text-white hover:bg-white/20 backdrop-blur-md'
                 : 'border-2 border-primary-100 text-primary-900 hover:bg-primary-50'
             }`}>
               {hero.cta2_text}
-            </button>
+            </a>
           </div>
         </motion.div>
       </div>

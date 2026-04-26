@@ -156,7 +156,7 @@ const Productos = () => {
   if (products.length === 0) return null;
 
   return (
-    <section id="Productos" className="py-32 bg-slate-50 relative overflow-hidden">
+    <section id="productos" className="py-32 bg-slate-50 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="text-center mb-20">
           <motion.div
