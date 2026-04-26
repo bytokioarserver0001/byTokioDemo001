@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { Shield, User, Star, Trash2, Pencil, Plus, Package, Eye, Ban, CheckCircle, LayoutDashboard, Calendar } from 'lucide-react';
+import { Shield, User, Users, Star, Trash2, Pencil, Plus, Package, Eye, Ban, CheckCircle, LayoutDashboard, Calendar } from 'lucide-react';
 import UserEditModal from '../components/UserEditModal';
 import ProductEditModal from '../components/ProductEditModal';
 import HeroEditor from '../components/HeroEditor';
@@ -182,7 +182,7 @@ const Admin = () => {
             <span>Ver Sitio</span>
           </button>
           
-          <div className="flex bg-slate-100 p-1 rounded-2xl">
+          <div className="flex bg-slate-100 p-1 rounded-2xl flex-wrap gap-1">
           <button 
             onClick={() => setActiveTab('usuarios')}
             className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
@@ -191,8 +191,30 @@ const Admin = () => {
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            <User size={18} />
-            <span>Usuarios</span>
+            <Shield size={18} />
+            <span>Admins</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('clientes')}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
+              activeTab === 'clientes' 
+                ? 'bg-white text-primary-900 shadow-md' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Users size={18} />
+            <span>Clientes</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('portada')}
+            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
+              activeTab === 'portada' 
+                ? 'bg-white text-primary-900 shadow-md' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <LayoutDashboard size={18} />
+            <span>Portada</span>
           </button>
           <button 
             onClick={() => setActiveTab('productos')}
@@ -215,17 +237,6 @@ const Admin = () => {
           >
             <Package size={18} />
             <span>Servicios</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('portada')}
-            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center space-x-2 ${
-              activeTab === 'portada' 
-                ? 'bg-white text-primary-900 shadow-md' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <LayoutDashboard size={18} />
-            <span>Portada</span>
           </button>
           <button 
             onClick={() => setActiveTab('turnos')}
@@ -262,7 +273,7 @@ const Admin = () => {
             </div>
           </div>
         </div>
-      ) : activeTab === 'usuarios' ? (
+      ) : (activeTab === 'usuarios' || activeTab === 'clientes') ? (
         <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-slate-200 overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -275,7 +286,12 @@ const Admin = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {users.map((u) => (
+              {users
+                .filter(u => activeTab === 'clientes'
+                  ? ['cliente', 'usuario', 'bloqueado'].includes(u.role)
+                  : ['admin', 'superadmin'].includes(u.role)
+                )
+                .map((u) => (
                 <tr 
                   key={u.id} 
                   className={`transition-colors group ${
