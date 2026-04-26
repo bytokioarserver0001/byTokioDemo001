@@ -5,7 +5,8 @@ import { Save, Loader, CheckCircle } from 'lucide-react';
 const SectionEditor = ({ sectionName, defaultTitle, defaultSubtitle }) => {
   const [data, setData] = useState({
     title: defaultTitle || '',
-    subtitle: defaultSubtitle || ''
+    subtitle: defaultSubtitle || '',
+    is_visible: true
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -22,7 +23,8 @@ const SectionEditor = ({ sectionName, defaultTitle, defaultSubtitle }) => {
         if (res?.content) {
           setData({
             title: res.content.title || defaultTitle || '',
-            subtitle: res.content.subtitle || defaultSubtitle || ''
+            subtitle: res.content.subtitle || defaultSubtitle || '',
+            is_visible: res.content.is_visible !== undefined ? res.content.is_visible : true
           });
         }
       } catch (err) {
@@ -80,6 +82,25 @@ const SectionEditor = ({ sectionName, defaultTitle, defaultSubtitle }) => {
           placeholder={defaultSubtitle}
         />
       </div>
+      
+      <div className="flex flex-col items-center justify-center min-w-[100px]">
+        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">
+          Visibilidad
+        </label>
+        <button
+          onClick={() => setData(prev => ({...prev, is_visible: !prev.is_visible}))}
+          className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 ${
+            data.is_visible ? 'bg-green-500' : 'bg-slate-300'
+          }`}
+        >
+          <div 
+            className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 ${
+              data.is_visible ? 'translate-x-6' : 'translate-x-0'
+            }`}
+          />
+        </button>
+      </div>
+
       <button 
         onClick={handleSave}
         disabled={saving}

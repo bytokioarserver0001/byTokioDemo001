@@ -5,7 +5,11 @@ import { supabase } from '../lib/supabase';
 
 const Services = () => {
   const [services, setServices] = useState([]);
-  const [sectionData, setSectionData] = useState({ title: 'Nuestros Servicios', subtitle: 'Selecciona un viaje diseñado para tu renovación.' });
+  const [sectionData, setSectionData] = useState({ 
+    title: 'Nuestros Servicios', 
+    subtitle: 'Selecciona un viaje diseñado para tu renovación.',
+    is_visible: true 
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +35,8 @@ const Services = () => {
       if (settingsRes.data?.content) {
         setSectionData({
           title: settingsRes.data.content.title || 'Nuestros Servicios',
-          subtitle: settingsRes.data.content.subtitle || 'Selecciona un viaje diseñado para tu renovación.'
+          subtitle: settingsRes.data.content.subtitle || 'Selecciona un viaje diseñado para tu renovación.',
+          is_visible: settingsRes.data.content.is_visible !== undefined ? settingsRes.data.content.is_visible : true
         });
       }
 
@@ -47,6 +52,8 @@ const Services = () => {
       <p className="text-slate-400 font-serif italic text-xl">Cargando Servicios...</p>
     </div>
   );
+
+  if (sectionData.is_visible === false) return null;
 
   return (
     <section id="servicios" className="py-20 bg-slate-100/30">

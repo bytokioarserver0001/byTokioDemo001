@@ -110,7 +110,11 @@ const ProductCard = ({ product }) => {
 
 const Productos = () => {
   const [products, setProducts] = useState([]);
-  const [sectionData, setSectionData] = useState({ title: 'Productos de Bienestar', subtitle: 'Una selección exclusiva de productos diseñados para prolongar tu experiencia Zen en casa.' });
+  const [sectionData, setSectionData] = useState({ 
+    title: 'Productos de Bienestar', 
+    subtitle: 'Una selección exclusiva de productos diseñados para prolongar tu experiencia Zen en casa.',
+    is_visible: true
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -136,7 +140,8 @@ const Productos = () => {
       if (settingsRes.data?.content) {
         setSectionData({
           title: settingsRes.data.content.title || 'Productos de Bienestar',
-          subtitle: settingsRes.data.content.subtitle || 'Una selección exclusiva de productos diseñados para prolongar tu experiencia Zen en casa.'
+          subtitle: settingsRes.data.content.subtitle || 'Una selección exclusiva de productos diseñados para prolongar tu experiencia Zen en casa.',
+          is_visible: settingsRes.data.content.is_visible !== undefined ? settingsRes.data.content.is_visible : true
         });
       }
 
@@ -153,6 +158,7 @@ const Productos = () => {
     </div>
   );
 
+  if (sectionData.is_visible === false) return null;
   if (products.length === 0) return null;
 
   return (
