@@ -24,6 +24,7 @@ const Turnos = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [myBookings, setMyBookings] = useState([]);
+  const [occupiedSlots, setOccupiedSlots] = useState([]);
 
   // Días y horarios simplificados para demo
   const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -44,6 +45,13 @@ const Turnos = () => {
           is_visible: section.content.is_visible !== undefined ? section.content.is_visible : true
         });
       }
+
+      // Fetch availability (we need all dates and times to block occupied slots)
+      const { data: allBookings } = await supabase
+        .from('bookings')
+        .select('booking_date, booking_time');
+      
+      setOccupiedSlots(allBookings || []);
 
       if (user) {
         let query = supabase
@@ -66,6 +74,8 @@ const Turnos = () => {
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(fetchData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, [user, isAdmin]);
 
   const handleSlotClick = (day, slot) => {
@@ -82,13 +92,26 @@ const Turnos = () => {
   const confirmBooking = async () => {
     setBookingLoading(true);
     try {
+      // 1. Double check availability right before inserting
+      const { data: isBusy } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('booking_date', selectedDate)
+        .eq('booking_time', selectedSlot)
+        .maybeSingle();
+
+      if (isBusy) {
+        throw new Error('Lo sentimos, este turno se acaba de ocupar. Por favor selecciona otro.');
+      }
+
+      // 2. Proceed with booking if free
       const { data: dbData, error: dbError } = await supabase
         .from('bookings')
         .insert([{
           user_id: user.id,
           booking_date: selectedDate,
           booking_time: selectedSlot,
-          status: 'confirmed'
+          status: 'pending'
         }])
         .select()
         .single();
@@ -153,15 +176,24 @@ const Turnos = () => {
         {user && myBookings.length > 0 && (
           <div className="mb-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {myBookings.map((b) => (
-              <div key={b.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl flex justify-between items-center">
-                <div>
-                  <div className="font-bold text-slate-800">{b.booking_date}</div>
-                  <div className="text-xs text-primary-500 font-bold">{b.booking_time} hs</div>
+              <div key={b.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl flex flex-col space-y-4">
+                <div className="flex justify-between items-start">
+                  <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                    b.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {b.status === 'confirmed' ? 'Confirmado' : 'Pendiente'}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-bold text-slate-800 flex items-center"><Calendar size={16} className="mr-2 text-slate-400" /> {b.booking_date}</div>
+                  <div className="text-sm font-medium text-slate-500 flex items-center"><Clock size={16} className="mr-2 text-slate-400" /> {b.booking_time} hs</div>
                   {isAdmin && <div className="text-[10px] text-slate-400 mt-2">{b.profiles?.full_name}</div>}
                 </div>
-                <button onClick={() => handleCancelBooking(b.id)} className="text-red-300 hover:text-red-500 transition-colors">
-                  <Trash2 size={18} />
-                </button>
+                <div className="pt-2 border-t border-slate-50">
+                  <button onClick={() => handleCancelBooking(b.id)} className="w-full py-3 bg-red-50 text-red-600 rounded-2xl font-bold text-sm hover:bg-red-100 transition-colors">
+                    Cancelar Turno
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -175,15 +207,25 @@ const Turnos = () => {
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{day}</span>
                 </div>
                 <div className="space-y-2">
-                  {timeSlots.map((time) => (
-                    <button
-                      key={time}
-                      onClick={() => handleSlotClick(day, time)}
-                      className="w-full py-3 rounded-xl border border-slate-50 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700 transition-all text-xs font-bold text-slate-500"
-                    >
-                      {time}
-                    </button>
-                  ))}
+                  {timeSlots.map((time) => {
+                    const fullDate = `2026-05-${25 + days.indexOf(day)}`;
+                    const isOccupied = occupiedSlots.some(s => s.booking_date === fullDate && s.booking_time === time);
+                    
+                    return (
+                      <button
+                        key={time}
+                        disabled={isOccupied}
+                        onClick={() => handleSlotClick(day, time)}
+                        className={`w-full py-3 rounded-xl border transition-all text-xs font-bold ${
+                          isOccupied 
+                            ? 'bg-slate-100 border-slate-100 text-slate-300 cursor-not-allowed' 
+                            : 'border-slate-50 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700 text-slate-500'
+                        }`}
+                      >
+                        {isOccupied ? 'Ocupado' : time}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ))}

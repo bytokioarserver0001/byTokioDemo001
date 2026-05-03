@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Shield, User, Users, Star, Trash2, Pencil, Plus, Package, Eye, Ban, CheckCircle, LayoutDashboard, Calendar, Search, Filter, Tag } from 'lucide-react';
+import { Shield, User, Users, Star, Trash2, Pencil, Plus, Package, Eye, Ban, CheckCircle, LayoutDashboard, Calendar, Search, Filter, Tag, AlertCircle } from 'lucide-react';
 import UserEditModal from '../components/UserEditModal';
 import ProductEditModal from '../components/ProductEditModal';
+import BookingEditModal from '../components/BookingEditModal';
 import HeroEditor from '../components/HeroEditor';
 import SectionEditor from '../components/SectionEditor';
 
@@ -20,6 +21,8 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   const fetchUsers = async () => {
     try {
@@ -56,6 +59,8 @@ const Admin = () => {
       setLoading(false);
     };
     init();
+    const interval = setInterval(fetchBookings, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // HANDLERS QUE FALTABAN
@@ -90,6 +95,18 @@ const Admin = () => {
     if (!window.confirm('¿Eliminar este turno definitivamente?')) return;
     await supabase.from('bookings').delete().eq('id', id);
     fetchBookings();
+  };
+
+  const saveBooking = async (id, data) => {
+    try {
+      if (id) {
+        await supabase.from('bookings').update(data).eq('id', id);
+      } else {
+        await supabase.from('bookings').insert([data]);
+      }
+      setIsBookingModalOpen(false);
+      fetchBookings();
+    } catch (err) { alert('Error: ' + err.message); }
   };
 
   if (loading) return <div className="pt-32 text-center text-slate-500 font-serif animate-pulse text-2xl italic">Cargando tu universo...</div>;
@@ -165,7 +182,15 @@ const Admin = () => {
               defaultSubtitle="Elegí el momento perfecto para conectar con vos misma."
             />
             <div className="bg-white/70 backdrop-blur-xl rounded-[3rem] border border-white border-opacity-40 shadow-2xl overflow-hidden">
-               <div className="p-8 border-b border-slate-50"><h2 className="text-2xl font-serif">Reservas</h2></div>
+               <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white/50">
+                  <h2 className="text-2xl font-serif">Reservas</h2>
+                  <button 
+                    onClick={() => { setSelectedBooking(null); setIsBookingModalOpen(true); }} 
+                    className="bg-primary-900 text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 shadow-xl shadow-primary-900/20 hover:scale-105 active:scale-95 transition-all text-sm"
+                  >
+                    <Plus size={16}/><span>Nuevo Turno</span>
+                  </button>
+               </div>
                <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
@@ -173,6 +198,7 @@ const Admin = () => {
                         <th className="px-8 py-5">Fecha y Hora</th>
                         <th className="px-8 py-5">Cliente</th>
                         <th className="px-8 py-5">Contacto</th>
+                        <th className="px-8 py-5">Estado</th>
                         <th className="px-8 py-5 text-right">Acción</th>
                       </tr>
                     </thead>
@@ -180,24 +206,55 @@ const Admin = () => {
                       {bookings
                         .sort((a, b) => new Date(`${a.booking_date} ${a.booking_time}`) - new Date(`${b.booking_date} ${b.booking_time}`))
                         .map((b) => {
-                        // Handle potential array or object from Supabase join
-                        const customer = Array.isArray(b.profiles) ? b.profiles[0] : b.profiles;
+                        // Plan B: Find user in the pre-loaded users list for 100% reliability
+                        const customer = users.find(u => u.id === b.user_id) || (Array.isArray(b.profiles) ? b.profiles[0] : b.profiles);
                         
                         return (
                         <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-8 py-6 font-bold text-slate-900">
+                          <td className="px-8 py-6 font-bold text-slate-900 text-sm">
                              {new Date(b.booking_date).toLocaleDateString('es-AR')} {b.booking_time}hs
                           </td>
-                          <td className="px-8 py-6 font-medium text-primary-950">
-                             {customer?.full_name || 'Sin nombre'}
-                             {!customer && <div className="text-[10px] text-red-400 font-normal">ID: {b.user_id?.substring(0,8)}...</div>}
+                          <td className="px-8 py-6">
+                             <div className="font-bold text-primary-950 text-sm">{customer?.full_name || 'Sin nombre'}</div>
+                             <div className="text-[10px] text-slate-400 font-mono italic">ID: {b.user_id?.substring(0,8)}...</div>
                           </td>
-                          <td className="px-8 py-6 text-xs text-slate-500">
-                             <div>{customer?.email || '---'}</div>
-                             <div className="text-primary-600 font-bold">{customer?.phone || '---'}</div>
+                          <td className="px-8 py-6">
+                             <div className="text-xs text-slate-600 font-medium">{customer?.email || '---'}</div>
+                             <div className="text-primary-600 font-black text-xs">{customer?.phone || '---'}</div>
                           </td>
-                          <td className="px-8 py-6 text-right">
-                            <button onClick={() => handleDeleteBooking(b.id)} className="p-2.5 bg-red-50 text-red-400 rounded-xl hover:bg-red-100 transition-all">
+                          <td className="px-8 py-6">
+                             {b.status === 'pending' ? (
+                               <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">
+                                 <AlertCircle size={10} className="mr-1" /> Pendiente
+                               </span>
+                             ) : (
+                               <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-green-50 text-green-600 border border-green-100">
+                                 <CheckCircle size={10} className="mr-1" /> Confirmado
+                               </span>
+                             )}
+                          </td>
+                          <td className="px-8 py-6 text-right space-x-2">
+                            {b.status === 'pending' && (
+                              <button 
+                                onClick={() => saveBooking(b.id, { status: 'confirmed' })} 
+                                className="p-2.5 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-all inline-flex"
+                                title="Confirmar Turno"
+                              >
+                                 <CheckCircle size={16}/>
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => { setSelectedBooking(b); setIsBookingModalOpen(true); }} 
+                              className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-100 hover:text-slate-600 transition-all inline-flex"
+                              title="Editar Turno"
+                            >
+                               <Pencil size={16}/>
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteBooking(b.id)} 
+                              className="p-2.5 bg-red-50 text-red-400 rounded-xl hover:bg-red-100 transition-all inline-flex"
+                              title="Eliminar Turno"
+                            >
                                <Trash2 size={16}/>
                             </button>
                           </td>
@@ -346,6 +403,7 @@ const Admin = () => {
 
       <UserEditModal isOpen={isUserModalOpen} onClose={() => setIsUserModalOpen(false)} user={selectedUser} onSave={saveUserChanges} />
       <ProductEditModal isOpen={isProductModalOpen} onClose={() => setIsProductModalOpen(false)} product={selectedProduct} onSave={saveProduct} />
+      <BookingEditModal isOpen={isBookingModalOpen} onClose={() => setIsBookingModalOpen(false)} booking={selectedBooking} onSave={saveBooking} users={users} />
     </div>
   );
 };

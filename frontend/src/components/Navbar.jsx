@@ -8,8 +8,9 @@ import LoginModal from './LoginModal';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, logout, isLoginModalOpen, openLoginModal, closeLoginModal } = useAuth();
+  const { user, profile, logout, isLoginModalOpen, openLoginModal, closeLoginModal } = useAuth();
   const { setIsCartOpen, cartCount } = useCart();
   const navigate = useNavigate();
   const [logoSettings, setLogoSettings] = useState({
@@ -121,20 +122,41 @@ const Navbar = () => {
 
           <div className="flex items-center space-x-6">
             {user ? (
-              <div className="flex items-center space-x-4">
+              <div className="relative">
                 <button
-                  onClick={() => navigate('/admin')}
-                  className="p-2 text-white border border-white/20 rounded-full hover:bg-white/10 transition-all"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="p-2 text-white border border-white/20 rounded-full hover:bg-white/10 transition-all focus:outline-none"
                 >
                   <User size={20} />
                 </button>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 text-primary-200 hover:text-red-400 transition-all"
-                  title="Cerrar sesión"
-                >
-                  <LogOut size={20} />
-                </button>
+                
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                     <div className="p-6 bg-slate-50 border-b border-slate-100 text-center">
+                        <div className="w-16 h-16 mx-auto bg-primary-100 text-primary-700 rounded-full flex items-center justify-center mb-3">
+                           <User size={32} />
+                        </div>
+                        <h4 className="font-bold text-slate-800 text-base">{profile?.full_name || 'Sin nombre'}</h4>
+                        <p className="text-xs text-slate-500 font-medium break-all">{user.email}</p>
+                        <p className="text-xs text-primary-600 font-black mt-1">{profile?.phone || 'Sin teléfono'}</p>
+                     </div>
+                     <div className="p-2">
+                        <button 
+                          onClick={() => { setIsProfileOpen(false); navigate('/admin'); }}
+                          className="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-primary-700 rounded-xl transition-all"
+                        >
+                          Ir a mi Panel
+                        </button>
+                        <button 
+                          onClick={() => { setIsProfileOpen(false); handleLogout(); }}
+                          className="w-full text-left px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-all flex items-center justify-between"
+                        >
+                          <span>Cerrar sesión</span>
+                          <LogOut size={16} />
+                        </button>
+                     </div>
+                  </div>
+                )}
               </div>
             ) : (
               <button
