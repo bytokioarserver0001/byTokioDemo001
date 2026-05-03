@@ -112,54 +112,97 @@ const Admin = () => {
           <p className="text-slate-400 font-light text-lg">Control total sobre tu sitio wellness.</p>
         </div>
 
-        <div className="flex bg-slate-100/80 backdrop-blur-md p-1.5 rounded-[2rem] shadow-inner overflow-x-auto scrollbar-hide">
-          {[
-            { id: 'turnos', label: 'Turnos', icon: Calendar },
-            { id: 'usuarios', label: 'Admins', icon: Shield },
-            { id: 'clientes', label: 'Clientes', icon: Users },
-            { id: 'servicios', label: 'Servicios', icon: Star },
-            { id: 'productos', label: 'Productos', icon: Package },
-            { id: 'portada', label: 'Portada', icon: LayoutDashboard }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-                activeTab === tab.id ? 'bg-white text-primary-900 shadow-xl' : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <tab.icon size={16} />
-              <span>{tab.label}</span>
-            </button>
-          ))}
+        {/* Tabs organized in two rows */}
+        <div className="space-y-4">
+          {/* Row 1: Site Management */}
+          <div className="flex bg-slate-100/80 backdrop-blur-md p-1.5 rounded-[2rem] shadow-inner overflow-x-auto scrollbar-hide">
+            {[
+              { id: 'usuarios', label: 'Admins', icon: Shield },
+              { id: 'clientes', label: 'Clientes', icon: Users },
+              { id: 'portada', label: 'Portada', icon: LayoutDashboard }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                  activeTab === tab.id ? 'bg-white text-primary-900 shadow-xl' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <tab.icon size={16} />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Row 2: Content Management */}
+          <div className="flex bg-slate-100/80 backdrop-blur-md p-1.5 rounded-[2rem] shadow-inner overflow-x-auto scrollbar-hide">
+            {[
+              { id: 'servicios', label: 'Servicios', icon: Star },
+              { id: 'productos', label: 'Productos', icon: Package },
+              { id: 'turnos', label: 'Turnos', icon: Calendar }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                  activeTab === tab.id ? 'bg-white text-primary-900 shadow-xl' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <tab.icon size={16} />
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
         {activeTab === 'turnos' && (
           <div className="space-y-8">
+            <SectionEditor 
+              sectionName="turnos_section" 
+              defaultTitle="Reserva tu Turno" 
+              defaultSubtitle="Elegí el momento perfecto para conectar con vos misma."
+            />
             <div className="bg-white/70 backdrop-blur-xl rounded-[3rem] border border-white border-opacity-40 shadow-2xl overflow-hidden">
                <div className="p-8 border-b border-slate-50"><h2 className="text-2xl font-serif">Reservas</h2></div>
                <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="text-[10px] uppercase bg-slate-50/50">
-                        <th className="px-8 py-5">Fecha</th>
+                      <tr className="text-[10px] uppercase bg-slate-50/50 text-slate-400 font-black">
+                        <th className="px-8 py-5">Fecha y Hora</th>
                         <th className="px-8 py-5">Cliente</th>
+                        <th className="px-8 py-5">Contacto</th>
                         <th className="px-8 py-5 text-right">Acción</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
-                      {bookings.map((b) => (
-                        <tr key={b.id} className="hover:bg-slate-50/50">
-                          <td className="px-8 py-6 font-bold">{b.booking_date} {b.booking_time}hs</td>
-                          <td className="px-8 py-6">
-                            <div className="font-bold">{b.profiles?.full_name || 'Sin nombre'}</div>
-                            <div className="text-xs text-slate-400">{b.profiles?.phone || b.profiles?.email}</div>
+                      {bookings
+                        .sort((a, b) => new Date(`${a.booking_date} ${a.booking_time}`) - new Date(`${b.booking_date} ${b.booking_time}`))
+                        .map((b) => {
+                        // Handle potential array or object from Supabase join
+                        const customer = Array.isArray(b.profiles) ? b.profiles[0] : b.profiles;
+                        
+                        return (
+                        <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-8 py-6 font-bold text-slate-900">
+                             {new Date(b.booking_date).toLocaleDateString('es-AR')} {b.booking_time}hs
                           </td>
-                          <td className="px-8 py-6 text-right"><button onClick={() => handleDeleteBooking(b.id)} className="text-red-300 hover:text-red-600"><Trash2 size={18}/></button></td>
+                          <td className="px-8 py-6 font-medium text-primary-950">
+                             {customer?.full_name || 'Sin nombre'}
+                             {!customer && <div className="text-[10px] text-red-400 font-normal">ID: {b.user_id?.substring(0,8)}...</div>}
+                          </td>
+                          <td className="px-8 py-6 text-xs text-slate-500">
+                             <div>{customer?.email || '---'}</div>
+                             <div className="text-primary-600 font-bold">{customer?.phone || '---'}</div>
+                          </td>
+                          <td className="px-8 py-6 text-right">
+                            <button onClick={() => handleDeleteBooking(b.id)} className="p-2.5 bg-red-50 text-red-400 rounded-xl hover:bg-red-100 transition-all">
+                               <Trash2 size={16}/>
+                            </button>
+                          </td>
                         </tr>
-                      ))}
+                      )})}
                     </tbody>
                   </table>
                </div>
@@ -169,6 +212,22 @@ const Admin = () => {
 
         {(activeTab === 'servicios' || activeTab === 'productos') && (
            <div className="space-y-8">
+              {activeTab === 'servicios' && (
+                <SectionEditor 
+                  sectionName="services_section" 
+                  defaultTitle="Nuestros Servicios" 
+                  defaultSubtitle="Experiencias diseñadas para tu bienestar."
+                />
+              )}
+
+              {activeTab === 'productos' && (
+                <SectionEditor 
+                  sectionName="products_section" 
+                  defaultTitle="Nuestros Tesoros" 
+                  defaultSubtitle="Llevate una parte de la experiencia zen a tu casa."
+                />
+              )}
+              
               <div className="flex justify-between items-center bg-white/50 p-8 rounded-[3rem] border border-white">
                  <h2 className="text-2xl font-serif">Gestión de {activeTab}</h2>
                  <button onClick={() => { setSelectedProduct({ category: activeTab === 'servicios' ? 'servicio' : 'general' }); setIsProductModalOpen(true); }} className="bg-primary-900 text-white px-8 py-4 rounded-2xl font-bold flex items-center space-x-2"><Plus size={20}/><span>Nuevo</span></button>
