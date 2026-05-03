@@ -25,9 +25,25 @@ const Turnos = () => {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [myBookings, setMyBookings] = useState([]);
   const [occupiedSlots, setOccupiedSlots] = useState([]);
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, 1 = next week, etc.
 
-  // Días y horarios simplificados para demo
-  const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  // Generar semana dinámica con offset
+  const getWeekDates = (offset = 0) => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) + (offset * 7));
+    const labels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    return labels.map((label, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return { label, date: `${yyyy}-${mm}-${dd}`, dayNum: dd };
+    });
+  };
+  const weekDates = getWeekDates(weekOffset);
   const timeSlots = ['09:00', '10:00', '11:00', '15:00', '16:00', '17:00'];
 
   const fetchData = async () => {
@@ -46,12 +62,22 @@ const Turnos = () => {
         });
       }
 
-      // Fetch availability (we need all dates and times to block occupied slots)
-      const { data: allBookings } = await supabase
+      // Fetch availability including status to show pending vs confirmed
+      const { data: allBookings, error: slotError } = await supabase
         .from('bookings')
-        .select('booking_date, booking_time');
+        .select('booking_date, booking_time, status');
       
-      setOccupiedSlots(allBookings || []);
+      if (slotError) {
+        console.error('Error fetching slots:', slotError.message);
+      }
+
+      // Normalize time format: "09:00:00" -> "09:00"
+      const normalized = (allBookings || []).map(s => ({
+        ...s,
+        booking_time: s.booking_time ? s.booking_time.substring(0, 5) : s.booking_time
+      }));
+      console.log('Occupied slots fetched:', normalized.length, normalized);
+      setOccupiedSlots(normalized);
 
       if (user) {
         let query = supabase
@@ -78,13 +104,12 @@ const Turnos = () => {
     return () => clearInterval(interval);
   }, [user, isAdmin]);
 
-  const handleSlotClick = (day, slot) => {
+  const handleSlotClick = (day, slot, realDate) => {
     if (!user) {
       openLoginModal();
       return;
     }
-    const fullDate = `2026-05-${25 + days.indexOf(day)}`;
-    setSelectedDate(fullDate);
+    setSelectedDate(realDate);
     setSelectedSlot(slot);
     setShowConfirm(true);
   };
@@ -162,7 +187,7 @@ const Turnos = () => {
     } catch (err) { alert(err.message); }
   };
 
-  if (loading && !myBookings.length) return null;
+  if (loading && !myBookings.length && !occupiedSlots.length) return null;
   if (sectionData.is_visible === false && !isAdmin) return null;
 
   return (
@@ -200,29 +225,51 @@ const Turnos = () => {
         )}
 
         <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden p-8">
+          {/* Week Navigation */}
+          <div className="flex justify-between items-center mb-6">
+            <button
+              onClick={() => setWeekOffset(w => w - 1)}
+              className="flex items-center space-x-2 px-4 py-2 bg-slate-50 text-slate-500 rounded-2xl hover:bg-slate-100 font-bold text-xs transition-all"
+            >
+              <ChevronLeft size={16} /> <span>Semana anterior</span>
+            </button>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              {weekDates[0]?.date} — {weekDates[5]?.date}
+            </span>
+            <button
+              onClick={() => setWeekOffset(w => w + 1)}
+              className="flex items-center space-x-2 px-4 py-2 bg-slate-50 text-slate-500 rounded-2xl hover:bg-slate-100 font-bold text-xs transition-all"
+            >
+              <span>Semana siguiente</span> <ChevronRight size={16} />
+            </button>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            {days.map((day) => (
-              <div key={day} className="space-y-4">
+            {weekDates.map(({ label, date, dayNum }) => (
+              <div key={date} className="space-y-4">
                 <div className="text-center py-2 bg-slate-50 rounded-xl">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{day}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
+                  <div className="text-xs text-slate-500 font-bold">{dayNum}</div>
                 </div>
                 <div className="space-y-2">
                   {timeSlots.map((time) => {
-                    const fullDate = `2026-05-${25 + days.indexOf(day)}`;
-                    const isOccupied = occupiedSlots.some(s => s.booking_date === fullDate && s.booking_time === time);
+                    const isOccupied = occupiedSlots.some(s => s.booking_date === date && s.booking_time === time);
+                    const occupiedSlot = occupiedSlots.find(s => s.booking_date === date && s.booking_time === time);
+                    const isPending = occupiedSlot?.status === 'pending';
                     
                     return (
                       <button
                         key={time}
                         disabled={isOccupied}
-                        onClick={() => handleSlotClick(day, time)}
+                        onClick={() => handleSlotClick(label, time, date)}
                         className={`w-full py-3 rounded-xl border transition-all text-xs font-bold ${
                           isOccupied 
-                            ? 'bg-slate-100 border-slate-100 text-slate-300 cursor-not-allowed' 
+                            ? isPending 
+                              ? 'bg-amber-50 border-amber-100 text-amber-400 cursor-not-allowed'
+                              : 'bg-slate-100 border-slate-100 text-slate-300 cursor-not-allowed'
                             : 'border-slate-50 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700 text-slate-500'
                         }`}
                       >
-                        {isOccupied ? 'Ocupado' : time}
+                        {isOccupied ? (isPending ? 'Pendiente' : 'Ocupado') : time}
                       </button>
                     );
                   })}
