@@ -9,6 +9,7 @@ const ProductEditModal = ({ isOpen, onClose, product, onSave }) => {
     name: '',
     description: '',
     price: 0,
+    sale_price: null,
     category: 'general',
     images: [],
     is_active: true
@@ -21,6 +22,7 @@ const ProductEditModal = ({ isOpen, onClose, product, onSave }) => {
         name: product.name || '',
         description: product.description || '',
         price: product.price || 0,
+        sale_price: product.sale_price || null,
         category: product.category || 'general',
         images: product.images || [],
         is_active: product.is_active ?? true
@@ -31,6 +33,7 @@ const ProductEditModal = ({ isOpen, onClose, product, onSave }) => {
         name: '',
         description: '',
         price: 0,
+        sale_price: null,
         category: 'general',
         images: [],
         is_active: true
@@ -133,18 +136,34 @@ const ProductEditModal = ({ isOpen, onClose, product, onSave }) => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Precio ($)</label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-4 top-4 text-slate-300" size={18} />
-                    <input
-                      type="number"
-                      required
-                      value={formData.price}
-                      onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all text-slate-900 font-medium"
-                      placeholder="0.00"
-                    />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Precio Normal ($)</label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-4 top-4 text-slate-300" size={18} />
+                      <input
+                        type="number"
+                        required
+                        value={formData.price}
+                        onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})}
+                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-slate-900 font-medium"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-red-400 uppercase tracking-widest mb-2">Precio Oferta ($)</label>
+                    <div className="relative">
+                      <Tag className="absolute left-4 top-4 text-red-200" size={18} />
+                      <input
+                        type="number"
+                        value={formData.sale_price || ''}
+                        onChange={(e) => setFormData({...formData, sale_price: e.target.value ? parseFloat(e.target.value) : null})}
+                        className="w-full pl-12 pr-4 py-4 bg-red-50/30 border border-red-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500 transition-all text-red-900 font-medium"
+                        placeholder="Opcional"
+                      />
+                    </div>
                   </div>
                 </div>
 

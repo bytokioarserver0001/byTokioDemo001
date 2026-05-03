@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Menu, X, User, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import LoginModal from './LoginModal';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, logout, isLoginModalOpen, openLoginModal, closeLoginModal } = useAuth();
   const { setIsCartOpen, cartCount } = useCart();
   const navigate = useNavigate();
   const [logoSettings, setLogoSettings] = useState({
@@ -22,19 +22,6 @@ const Navbar = () => {
     productos: true,
     turnos: true
   });
-
-  useEffect(() => {
-    // Escuchar cambios de autenticación
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   useEffect(() => {
     const fetchSections = async () => {
@@ -88,7 +75,7 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await logout();
     navigate('/');
   };
 
@@ -96,7 +83,7 @@ const Navbar = () => {
     { title: 'Inicio', href: '/' },
     ...(sectionVisibilities.services ? [{ title: 'Servicios', href: '#servicios' }] : []),
     ...(sectionVisibilities.productos ? [{ title: 'Productos', href: '#productos' }] : []),
-    ...(sectionVisibilities.turnos ? [{ title: 'Turnos', href: '#reserva' }] : []),
+    ...(sectionVisibilities.turnos ? [{ title: 'Turnos', href: '#turnos' }] : []),
     { title: 'Contacto', href: '#contacto' },
   ];
 
@@ -151,7 +138,7 @@ const Navbar = () => {
               </div>
             ) : (
               <button
-                onClick={() => setIsLoginModalOpen(true)}
+                onClick={openLoginModal}
                 className="p-2 text-white border border-white/20 rounded-full hover:bg-white/10 transition-all"
               >
                 <User size={20} />
@@ -198,7 +185,7 @@ const Navbar = () => {
         )}
       </nav>
 
-      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      <LoginModal isOpen={isLoginModalOpen} onClose={closeLoginModal} />
     </>
   );
 };

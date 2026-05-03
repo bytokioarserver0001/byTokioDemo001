@@ -1,6 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Save, Image, Type, AlignLeft, MousePointerClick, Upload, CheckCircle, Loader, Trash2, GripVertical, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { Save, Image, Type, AlignLeft, MousePointerClick, Upload, CheckCircle, Loader, Trash2, GripVertical, ChevronLeft, ChevronRight, Star, ChevronDown } from 'lucide-react';
+
+const FontPicker = ({ value, onChange, label, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClick = () => setIsOpen(false);
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, [isOpen]);
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <span className="text-xs font-bold text-slate-400 mb-2 block">{label}</span>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl flex items-center justify-between focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all text-slate-900 shadow-sm cursor-pointer min-h-[60px]"
+        style={{ fontFamily: value }}
+      >
+        <span className="text-lg">{value}</span>
+        <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-[100] w-full mt-2 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top">
+          <div className="max-h-64 overflow-y-auto custom-scrollbar py-2">
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full px-6 py-3 text-left hover:bg-primary-50 transition-colors flex items-center justify-between ${value === opt.value ? 'bg-primary-50/50 text-primary-600' : 'text-slate-700'}`}
+                style={{ fontFamily: opt.style || opt.value }}
+              >
+                <span className="text-lg">{opt.label}</span>
+                {value === opt.value && <CheckCircle size={14} className="text-primary-500" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const HeroEditor = () => {
   const [heroData, setHeroData] = useState({
@@ -15,8 +64,10 @@ const HeroEditor = () => {
     logo_text: '',
     logo_url: '',
     title_font: 'Playfair Display',
-    body_font: 'Outfit'
+    body_font: 'Outfit',
+    selected_palette: 'paleta001.png'
   });
+  const [availablePalettes, setAvailablePalettes] = useState([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -62,7 +113,8 @@ const HeroEditor = () => {
           logo_text: data.content.logo_text || '',
           logo_url: data.content.logo_url || '',
           title_font: data.content.title_font || 'Playfair Display',
-          body_font: data.content.body_font || 'Outfit'
+          body_font: data.content.body_font || 'Outfit',
+          selected_palette: data.content.selected_palette || 'paleta001.png'
         });
       }
     } catch (err) {
@@ -70,10 +122,24 @@ const HeroEditor = () => {
     }
   };
 
+  const scanPalettes = () => {
+    // Escaneamos dinámicamente usando las capacidades de Vite
+    const paletteFiles = import.meta.glob('../assets/PalettsColors/*.{png,jpg,jpeg,svg}', { eager: true });
+    const palettes = Object.keys(paletteFiles).map(path => {
+      const fileName = path.split('/').pop();
+      return {
+        name: fileName,
+        path: paletteFiles[path].default || paletteFiles[path]
+      };
+    });
+    setAvailablePalettes(palettes);
+  };
+
   useEffect(() => {
     const init = async () => {
       await fetchHeroSettings();
       await fetchGeneralSettings();
+      scanPalettes();
     };
     init();
   }, []);
@@ -89,23 +155,30 @@ const HeroEditor = () => {
 
   // Preview dinámico de fuentes
   useEffect(() => {
-    if (!generalData.title_font || !generalData.body_font) return;
+    // List of all available fonts to show in dropdown previews
+    const allFonts = [
+      'Outfit', 'Montserrat', 'Inter', 'Poppins', 
+      'Playfair Display', 'Merriweather', 'Lora', 
+      'Bebas Neue', 'Abril Fatface', 'Pacifico'
+    ];
     
-    const titleUrl = generalData.title_font.replace(/ /g, '+');
-    const bodyUrl = generalData.body_font.replace(/ /g, '+');
-    
-    const linkId = 'preview-site-fonts';
+    const fontQuery = allFonts.map(f => f.replace(/ /g, '+')).join('|');
+    const linkId = 'all-site-fonts-preview';
     let fontLink = document.getElementById(linkId);
+    
     if (!fontLink) {
       fontLink = document.createElement('link');
       fontLink.id = linkId;
       fontLink.rel = 'stylesheet';
       document.head.appendChild(fontLink);
     }
-    fontLink.href = `https://fonts.googleapis.com/css?family=${titleUrl}:300,400,600,700|${bodyUrl}:300,400,600,700&display=swap`;
+    fontLink.href = `https://fonts.googleapis.com/css?family=${fontQuery}:300,400,600,700&display=swap`;
     
-    document.documentElement.style.setProperty('--font-serif', `"${generalData.title_font}", serif`);
-    document.documentElement.style.setProperty('--font-sans', `"${generalData.body_font}", sans-serif`);
+    // Also apply the selected ones to the document variables for preview
+    if (generalData.title_font && generalData.body_font) {
+      document.documentElement.style.setProperty('--font-serif', `"${generalData.title_font}", serif`);
+      document.documentElement.style.setProperty('--font-sans', `"${generalData.body_font}", sans-serif`);
+    }
   }, [generalData.title_font, generalData.body_font]);
 
 
@@ -324,46 +397,80 @@ const HeroEditor = () => {
             </label>
             
             <div className="space-y-6">
-              <div>
-                <span className="text-xs font-bold text-slate-400 mb-2 block">Fuente para Títulos</span>
-                <select 
-                  value={generalData.title_font || 'Playfair Display'}
-                  onChange={e => setGeneralData(prev => ({...prev, title_font: e.target.value}))}
-                  className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all text-slate-900 font-serif shadow-sm cursor-pointer"
-                >
-                  <option value="Outfit">Outfit (Sans-Serif)</option>
-                  <option value="Montserrat">Montserrat (Sans-Serif)</option>
-                  <option value="Inter">Inter (Sans-Serif)</option>
-                  <option value="Poppins">Poppins (Sans-Serif)</option>
-                  <option value="Playfair Display">Playfair Display (Serif)</option>
-                  <option value="Merriweather">Merriweather (Serif)</option>
-                  <option value="Lora">Lora (Serif)</option>
-                  <option value="Bebas Neue">Bebas Neue (Ornamental)</option>
-                  <option value="Abril Fatface">Abril Fatface (Ornamental)</option>
-                  <option value="Pacifico">Pacifico (Ornamental)</option>
-                </select>
-              </div>
+              <FontPicker 
+                label="Fuente para Títulos"
+                value={generalData.title_font || 'Playfair Display'}
+                onChange={val => setGeneralData(prev => ({...prev, title_font: val}))}
+                options={[
+                  { value: 'Outfit', label: 'Outfit (Sans-Serif)' },
+                  { value: 'Montserrat', label: 'Montserrat (Sans-Serif)' },
+                  { value: 'Inter', label: 'Inter (Sans-Serif)' },
+                  { value: 'Poppins', label: 'Poppins (Sans-Serif)' },
+                  { value: 'Playfair Display', label: 'Playfair Display (Serif)' },
+                  { value: 'Merriweather', label: 'Merriweather (Serif)' },
+                  { value: 'Lora', label: 'Lora (Serif)' },
+                  { value: 'Bebas Neue', label: 'Bebas Neue (Ornamental)' },
+                  { value: 'Abril Fatface', label: 'Abril Fatface (Ornamental)' },
+                  { value: 'Pacifico', label: 'Pacifico (Ornamental)' }
+                ]}
+              />
               
-              <div>
-                <span className="text-xs font-bold text-slate-400 mb-2 block">Fuente para Textos / Subtítulos</span>
-                <select 
-                  value={generalData.body_font || 'Outfit'}
-                  onChange={e => setGeneralData(prev => ({...prev, body_font: e.target.value}))}
-                  className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500/50 transition-all text-slate-900 shadow-sm cursor-pointer"
-                >
-                  <option value="Outfit">Outfit (Sans-Serif)</option>
-                  <option value="Montserrat">Montserrat (Sans-Serif)</option>
-                  <option value="Inter">Inter (Sans-Serif)</option>
-                  <option value="Poppins">Poppins (Sans-Serif)</option>
-                  <option value="Playfair Display">Playfair Display (Serif)</option>
-                  <option value="Merriweather">Merriweather (Serif)</option>
-                  <option value="Lora">Lora (Serif)</option>
-                  <option value="Bebas Neue">Bebas Neue (Ornamental)</option>
-                  <option value="Abril Fatface">Abril Fatface (Ornamental)</option>
-                  <option value="Pacifico">Pacifico (Ornamental)</option>
-                </select>
-              </div>
+              <FontPicker 
+                label="Fuente para Textos / Subtítulos"
+                value={generalData.body_font || 'Outfit'}
+                onChange={val => setGeneralData(prev => ({...prev, body_font: val}))}
+                options={[
+                  { value: 'Outfit', label: 'Outfit (Sans-Serif)' },
+                  { value: 'Montserrat', label: 'Montserrat (Sans-Serif)' },
+                  { value: 'Inter', label: 'Inter (Sans-Serif)' },
+                  { value: 'Poppins', label: 'Poppins (Sans-Serif)' },
+                  { value: 'Playfair Display', label: 'Playfair Display (Serif)' },
+                  { value: 'Merriweather', label: 'Merriweather (Serif)' },
+                  { value: 'Lora', label: 'Lora (Serif)' },
+                  { value: 'Bebas Neue', label: 'Bebas Neue (Ornamental)' },
+                  { value: 'Abril Fatface', label: 'Abril Fatface (Ornamental)' },
+                  { value: 'Pacifico', label: 'Pacifico (Ornamental)' }
+                ]}
+              />
             </div>
+          </div>
+
+          {/* Paleta de Colores */}
+          <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-slate-200/60 p-8 shadow-2xl shadow-slate-200/50 mt-8">
+            <label className="flex items-center space-x-3 text-[10px] font-black text-primary-900/40 uppercase tracking-[0.2em] mb-6">
+              <Star size={14} className="text-primary-500" />
+              <span>Paleta de Colores</span>
+            </label>
+            
+            <div className="grid grid-cols-2 gap-4">
+              {availablePalettes.map((p) => (
+                <button
+                  key={p.name}
+                  onClick={() => setGeneralData(prev => ({...prev, selected_palette: p.name}))}
+                  className={`relative group rounded-2xl overflow-hidden border-4 transition-all ${
+                    generalData.selected_palette === p.name ? 'border-primary-500 shadow-lg scale-105' : 'border-transparent hover:border-slate-200'
+                  }`}
+                >
+                  <img src={p.path} alt={p.name} className="w-full aspect-video object-cover" />
+                  <div className={`absolute inset-0 bg-primary-900/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity`}>
+                    <CheckCircle size={24} className="text-white" />
+                  </div>
+                  {generalData.selected_palette === p.name && (
+                    <div className="absolute top-2 right-2 bg-primary-500 text-white p-1 rounded-full">
+                      <CheckCircle size={12} />
+                    </div>
+                  )}
+                </button>
+              ))}
+              {availablePalettes.length === 0 && (
+                <div className="col-span-2 text-center py-8 text-slate-400 text-xs italic">
+                  No se encontraron imágenes en src/assets/PalettsColors/
+                </div>
+              )}
+            </div>
+            <p className="text-[10px] text-slate-400 mt-4 leading-relaxed italic">
+              * El sistema utilizará los colores definidos en el archivo de paleta seleccionado para todo el sitio.
+            </p>
           </div>
 
           {/* Título principal */}

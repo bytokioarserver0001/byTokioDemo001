@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { siteContent } from '../data/content';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
 const Hero = () => {
   const [hero, setHero] = useState({
@@ -25,16 +25,22 @@ const Hero = () => {
           .single();
 
         if (data?.content) {
-          setHero(prev => ({
-            title: data.content.title || prev.title,
-            subtitle: data.content.subtitle || prev.subtitle,
-            cta_text: data.content.cta_text || prev.cta_text,
-            cta2_text: data.content.cta2_text || prev.cta2_text,
-            bg_images: data.content.bg_images || (data.content.bg_image ? [data.content.bg_image] : [])
-          }));
+          setHero({
+            title: data.content.title || siteContent.hero.title,
+            subtitle: data.content.subtitle || siteContent.hero.subtitle,
+            cta_text: data.content.cta_text || siteContent.hero.cta,
+            cta2_text: data.content.cta2_text || 'Ver Servicios',
+            bg_images: data.content.bg_images?.length > 0 
+              ? data.content.bg_images 
+              : (data.content.bg_image ? [data.content.bg_image] : siteContent.hero.bg_images)
+          });
         }
       } catch (_err) {
-        // Fallback to static content silently
+        // Fallback robusto
+        setHero(prev => ({
+          ...prev,
+          bg_images: siteContent.hero.bg_images || []
+        }));
       }
     };
     fetchHero();
@@ -148,11 +154,12 @@ const Hero = () => {
             {hero.subtitle}
           </motion.p>
           <div className="flex flex-wrap justify-center gap-5">
-            <a 
-              href="#reserva"
-              className="px-10 py-5 bg-primary-600 inline-block text-white rounded-2xl font-bold shadow-2xl shadow-primary-900/20 hover:bg-primary-700 hover:scale-105 active:scale-95 transition-all"
+            <a
+              href="#turnos"
+              className="inline-flex items-center space-x-3 px-10 py-5 bg-white text-slate-900 rounded-[2rem] font-bold text-lg hover:bg-opacity-90 transition-all transform hover:scale-105 shadow-2xl shadow-white/20 group"
             >
-              {hero.cta_text}
+              <span>Reservar Turno</span>
+              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </a>
             <a 
               href="#servicios"
