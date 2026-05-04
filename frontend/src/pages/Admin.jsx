@@ -33,12 +33,23 @@ const Admin = () => {
     try {
       const { data: u } = await supabase.from('profiles').select('*').order('role', { ascending: false });
       const { data: p } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      const { data: b } = await supabase.from('bookings').select('*, profiles(full_name, phone, email)').order('booking_date', { ascending: false });
+      
+      // Carga de turnos con fallback automático
+      let { data: b, error } = await supabase.from('bookings').select('*, profiles(full_name, phone, email)').order('booking_date', { ascending: false });
+      
+      if (error || !b) {
+        const { data: fallback } = await supabase.from('bookings').select('*').order('booking_date', { ascending: false });
+        b = fallback || [];
+      }
       
       setUsers(u || []);
       setProducts(p || []);
       setBookings(b || []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (e) {
+      console.error('Fetch error:', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -113,14 +124,22 @@ const Admin = () => {
               <table className="w-full text-left">
                  <thead><tr className="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold"><th className="px-8 py-4">Fecha</th><th className="px-8 py-4">Cliente</th><th className="px-8 py-4 text-center">Estado</th><th className="px-8 py-4 text-right">Acción</th></tr></thead>
                  <tbody className="divide-y">
-                    {bookings.map(b => (
+                    {(bookings || []).map(b => {
+                       const profileInBooking = b.profiles;
+                       const profileInUsers = users.find(u => u.id === b.user_id);
+                       const customer = profileInBooking || profileInUsers;
+                       
+                       return (
                        <tr key={b.id} className="hover:bg-slate-50">
                           <td className="px-8 py-6 font-bold text-sm">{formatDate(b.booking_date)} {b.booking_time?.substring(0,5)}hs</td>
-                          <td className="px-8 py-6"><div className="font-bold text-sm">{b.profiles?.full_name || 'Cargando...'}</div><div className="text-[10px] text-slate-400">{b.profiles?.phone || b.profiles?.email || '---'}</div></td>
+                          <td className="px-8 py-6">
+                             <div className="font-bold text-sm">{customer?.full_name || 'Cargando...'}</div>
+                             <div className="text-[10px] text-slate-400">{customer?.phone || customer?.email || 'ID: ' + b.user_id?.substring(0,8)}</div>
+                          </td>
                           <td className="px-8 py-6 text-center">{b.status==='pending'?<span className="text-[10px] font-bold py-1 px-3 bg-amber-50 text-amber-600 rounded-full">PENDIENTE</span>:<span className="text-[10px] font-bold py-1 px-3 bg-emerald-50 text-emerald-600 rounded-full">CONFIRMADO</span>}</td>
                           <td className="px-8 py-6 text-right space-x-2"><button onClick={()=>{setSelectedBooking(b); setIsBookingModalOpen(true)}} className="p-2 bg-slate-50 rounded-lg"><Pencil size={14}/></button><button onClick={()=>{setBookingToDelete(b); setIsDeleteModalOpen(true)}} className="p-2 bg-red-50 text-red-500 rounded-lg"><Trash2 size={14}/></button></td>
                        </tr>
-                    ))}
+                    )})}
                  </tbody>
               </table>
            </div>
@@ -131,14 +150,14 @@ const Admin = () => {
              <h2 className="text-2xl font-serif mb-6">Clientes</h2>
              <table className="w-full text-left">
                 <thead><tr className="text-[10px] uppercase text-slate-400 font-bold border-b"><th className="pb-4">Usuario</th><th className="pb-4 text-right">Acción</th></tr></thead>
-                <tbody className="divide-y">{users.filter(u=>u.role==='cliente').map(u=>(<tr key={u.id}><td className="py-6 font-bold text-slate-800">{u.full_name}</td><td className="py-6 text-right"><button onClick={()=>{setSelectedUser(u);setIsUserModalOpen(true)}} className="p-2 bg-slate-100 rounded-lg"><Pencil size={14}/></button></td></tr>))}</tbody>
+                <tbody className="divide-y">{(users || []).filter(u=>u.role==='cliente').map(u=>(<tr key={u.id}><td className="py-6 font-bold text-slate-800">{u.full_name}</td><td className="py-6 text-right"><button onClick={()=>{setSelectedUser(u);setIsUserModalOpen(true)}} className="p-2 bg-slate-100 rounded-lg"><Pencil size={14}/></button></td></tr>))}</tbody>
              </table>
           </div>
         )}
 
         {activeTab === 'usuarios' && (
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {users.filter(u=>u.role!=='cliente').map(u=>(<div key={u.id} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm"><div className="font-bold text-xl mb-1">{u.full_name}</div><div className="text-[10px] font-bold text-primary-600 uppercase mb-4">{u.role}</div><div className="text-xs text-slate-500 mb-6">{u.email}</div><button onClick={()=>{setSelectedUser(u);setIsUserModalOpen(true)}} className="w-full py-3 bg-slate-50 rounded-xl text-[10px] font-bold uppercase hover:bg-black hover:text-white">Editar</button></div>))}
+              {(users || []).filter(u=>u.role!=='cliente').map(u=>(<div key={u.id} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm"><div className="font-bold text-xl mb-1">{u.full_name}</div><div className="text-[10px] font-bold text-primary-600 uppercase mb-4">{u.role}</div><div className="text-xs text-slate-500 mb-6">{u.email}</div><button onClick={()=>{setSelectedUser(u);setIsUserModalOpen(true)}} className="w-full py-3 bg-slate-50 rounded-xl text-[10px] font-bold uppercase hover:bg-black hover:text-white">Editar</button></div>))}
            </div>
         )}
 
@@ -148,7 +167,7 @@ const Admin = () => {
               <div className="bg-white p-8 rounded-3xl shadow-xl">
                  <div className="flex justify-between items-center mb-8 px-4"><h2 className="text-2xl font-serif">Catálogo</h2><button onClick={()=>{setSelectedProduct({category:activeTab==='servicios'?'servicio':'producto'}); setIsProductModalOpen(true)}} className="p-3 bg-slate-50 rounded-xl"><Plus size={20}/></button></div>
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {products.filter(p=>activeTab==='servicios'?p.category==='servicio':p.category!=='servicio').map(p=>(
+                    {(products || []).filter(p=>activeTab==='servicios'?p.category==='servicio':p.category!=='servicio').map(p=>(
                        <div key={p.id} className="relative aspect-square bg-slate-50 rounded-3xl overflow-hidden group">
                           {(p.images && p.images[0]) && <img src={p.images[0]} className="w-full h-full object-cover"/>}
                           <div className="absolute top-2 right-2 bg-black/80 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg">${p.price}</div>
