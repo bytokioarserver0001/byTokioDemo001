@@ -38,11 +38,7 @@ const Admin = () => {
       setUsers(u || []);
       setProducts(p || []);
       setBookings(b || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -53,10 +49,33 @@ const Admin = () => {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   };
 
+  const saveProduct = async (id, data) => {
+    try {
+      if (id) await supabase.from('products').update(data).eq('id', id);
+      else await supabase.from('products').insert([data]);
+      setIsProductModalOpen(false);
+      fetchData();
+    } catch (err) { alert(err.message); }
+  };
+
   const saveBooking = async (id, data) => {
     try {
-      if (id) await supabase.from('bookings').update(data).eq('id', id);
-      else await supabase.from('bookings').insert([data]);
+      let res;
+      if (id) res = await supabase.from('bookings').update(data).eq('id', id).select().single();
+      else res = await supabase.from('bookings').insert([data]).select().single();
+      
+      if (res.data && (!id || data.status === 'confirmed')) {
+        const u = users.find(x => x.id === (data.user_id || res.data.user_id));
+        const [h, m] = (res.data.booking_time || '00:00').split(':').map(Number);
+        fetch(N8N_RESERVA_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: { full_name: u?.full_name || 'Cliente', phone: u?.phone || '' },
+            booking: { calendar_start: `${res.data.booking_date} ${String(h-1).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`, calendar_end: `${res.data.booking_date} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`, time: res.data.booking_time?.substring(0,5) }
+          })
+        }).catch(e => console.error(e));
+      }
       setIsBookingModalOpen(false);
       fetchData();
     } catch (err) { alert(err.message); }
@@ -64,6 +83,9 @@ const Admin = () => {
 
   const confirmDeleteBooking = async () => {
     if (!bookingToDelete) return;
+    const [h, m] = (bookingToDelete.booking_time || '00:00').split(':').map(Number);
+    const adjustedTime = `${String(h - 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    fetch(N8N_CANCELAR_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ booking_id: bookingToDelete.id, booking_date: bookingToDelete.booking_date, booking_time: adjustedTime, status: 'cancelled' }) }).catch(e => console.error(e));
     await supabase.from('bookings').delete().eq('id', bookingToDelete.id);
     setIsDeleteModalOpen(false);
     fetchData();
@@ -84,18 +106,18 @@ const Admin = () => {
       <div className="animate-in fade-in duration-500">
         {activeTab === 'turnos' && (
            <div className="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden">
-              <div className="p-8 border-b flex justify-between items-center">
+              <div className="p-8 border-b flex justify-between items-center bg-slate-50/20">
                  <h2 className="text-2xl font-serif">Turnos</h2>
                  <button onClick={()=>{setSelectedBooking(null); setIsBookingModalOpen(true)}} className="bg-black text-white px-6 py-3 rounded-xl font-bold flex items-center space-x-2 text-sm"><Plus size={16}/><span>Nuevo</span></button>
               </div>
               <table className="w-full text-left">
-                 <thead><tr className="bg-slate-50 text-[10px] uppercase text-slate-400 font-black"><th className="px-8 py-4">Fecha</th><th className="px-8 py-4">Cliente</th><th className="px-8 py-4 text-center">Estado</th><th className="px-8 py-4 text-right">Acción</th></tr></thead>
+                 <thead><tr className="bg-slate-50 text-[10px] uppercase text-slate-400 font-bold"><th className="px-8 py-4">Fecha</th><th className="px-8 py-4">Cliente</th><th className="px-8 py-4 text-center">Estado</th><th className="px-8 py-4 text-right">Acción</th></tr></thead>
                  <tbody className="divide-y">
                     {bookings.map(b => (
-                       <tr key={b.id} className="hover:bg-slate-50 transition-colors">
+                       <tr key={b.id} className="hover:bg-slate-50">
                           <td className="px-8 py-6 font-bold text-sm">{formatDate(b.booking_date)} {b.booking_time?.substring(0,5)}hs</td>
                           <td className="px-8 py-6"><div className="font-bold text-sm">{b.profiles?.full_name || 'Cargando...'}</div><div className="text-[10px] text-slate-400">{b.profiles?.phone || b.profiles?.email || '---'}</div></td>
-                          <td className="px-8 py-6 text-center">{b.status==='pending'?<span className="text-[10px] font-bold uppercase py-1 px-3 bg-amber-50 text-amber-600 rounded-full">Pendiente</span>:<span className="text-[10px] font-bold uppercase py-1 px-3 bg-emerald-50 text-emerald-600 rounded-full">Confirmado</span>}</td>
+                          <td className="px-8 py-6 text-center">{b.status==='pending'?<span className="text-[10px] font-bold py-1 px-3 bg-amber-50 text-amber-600 rounded-full">PENDIENTE</span>:<span className="text-[10px] font-bold py-1 px-3 bg-emerald-50 text-emerald-600 rounded-full">CONFIRMADO</span>}</td>
                           <td className="px-8 py-6 text-right space-x-2"><button onClick={()=>{setSelectedBooking(b); setIsBookingModalOpen(true)}} className="p-2 bg-slate-50 rounded-lg"><Pencil size={14}/></button><button onClick={()=>{setBookingToDelete(b); setIsDeleteModalOpen(true)}} className="p-2 bg-red-50 text-red-500 rounded-lg"><Trash2 size={14}/></button></td>
                        </tr>
                     ))}
@@ -115,13 +137,8 @@ const Admin = () => {
         )}
 
         {activeTab === 'usuarios' && (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {users.filter(u=>u.role!=='cliente').map(u=>(<div key={u.id} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-                 <div className="font-bold text-xl mb-1">{u.full_name}</div>
-                 <div className="text-[10px] font-black text-primary-600 uppercase mb-4">{u.role}</div>
-                 <div className="text-xs text-slate-500 mb-6">{u.email}</div>
-                 <button onClick={()=>{setSelectedUser(u);setIsUserModalOpen(true)}} className="w-full py-3 bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all">Editar</button>
-              </div>))}
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {users.filter(u=>u.role!=='cliente').map(u=>(<div key={u.id} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm"><div className="font-bold text-xl mb-1">{u.full_name}</div><div className="text-[10px] font-bold text-primary-600 uppercase mb-4">{u.role}</div><div className="text-xs text-slate-500 mb-6">{u.email}</div><button onClick={()=>{setSelectedUser(u);setIsUserModalOpen(true)}} className="w-full py-3 bg-slate-50 rounded-xl text-[10px] font-bold uppercase hover:bg-black hover:text-white">Editar</button></div>))}
            </div>
         )}
 
@@ -129,11 +146,11 @@ const Admin = () => {
            <div className="space-y-8">
               <SectionEditor sectionName={activeTab==='servicios'?'services_section':'productos_section'} />
               <div className="bg-white p-8 rounded-3xl shadow-xl">
-                 <div className="flex justify-between items-center mb-8"><h2 className="text-2xl font-serif">Catálogo</h2><button onClick={()=>{setSelectedProduct({category:activeTab==='servicios'?'servicio':'producto'}); setIsProductModalOpen(true)}} className="p-3 bg-slate-50 rounded-xl"><Plus size={20}/></button></div>
+                 <div className="flex justify-between items-center mb-8 px-4"><h2 className="text-2xl font-serif">Catálogo</h2><button onClick={()=>{setSelectedProduct({category:activeTab==='servicios'?'servicio':'producto'}); setIsProductModalOpen(true)}} className="p-3 bg-slate-50 rounded-xl"><Plus size={20}/></button></div>
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {products.filter(p=>activeTab==='servicios'?p.category==='servicio':p.category!=='servicio').map(p=>(
                        <div key={p.id} className="relative aspect-square bg-slate-50 rounded-3xl overflow-hidden group">
-                          {p.image_url && <img src={p.image_url} className="w-full h-full object-cover"/>}
+                          {(p.images && p.images[0]) && <img src={p.images[0]} className="w-full h-full object-cover"/>}
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center space-x-2"><button onClick={()=>{setSelectedProduct(p); setIsProductModalOpen(true)}} className="p-3 bg-white rounded-xl"><Pencil size={16}/></button></div>
                           <div className="absolute bottom-2 left-2 right-2 bg-white/90 p-2 rounded-xl text-[10px] font-bold truncate">{p.name}</div>
                        </div>
@@ -146,13 +163,11 @@ const Admin = () => {
       </div>
 
       <UserEditModal isOpen={isUserModalOpen} onClose={()=>setIsUserModalOpen(false)} user={selectedUser} onSave={fetchData} />
-      <ProductEditModal isOpen={isProductModalOpen} onClose={()=>setIsProductModalOpen(false)} product={selectedProduct} onSave={fetchData} />
+      <ProductEditModal isOpen={isProductModalOpen} onClose={()=>setIsProductModalOpen(false)} product={selectedProduct} onSave={saveProduct} />
       <BookingEditModal isOpen={isBookingModalOpen} onClose={()=>setIsBookingModalOpen(false)} booking={selectedBooking} onSave={saveBooking} users={users} />
       <AnimatePresence>
         {isDeleteModalOpen && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white p-10 rounded-[3rem] text-center"><h2 className="text-2xl font-serif mb-6">¿Borrar?</h2><button onClick={confirmDeleteBooking} className="w-full py-4 bg-red-600 text-white rounded-2xl font-bold mb-2">Confirmar</button><button onClick={()=>setIsDeleteModalOpen(false)} className="text-slate-400">Volver</button></div>
-          </div>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"><div className="bg-white p-12 rounded-[3.5rem]"><h2 className="text-2xl font-serif mb-6">¿Borrar?</h2><button onClick={confirmDeleteBooking} className="w-full py-4 bg-red-600 text-white rounded-2xl mb-2">Confirmar</button><button onClick={()=>setIsDeleteModalOpen(false)} className="text-slate-400">Volver</button></div></div>
         )}
       </AnimatePresence>
     </div>
