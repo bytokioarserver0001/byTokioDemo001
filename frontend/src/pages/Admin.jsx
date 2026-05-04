@@ -172,7 +172,6 @@ const Admin = () => {
                                 <td className="px-10 py-10 text-right">
                                    <div className="flex justify-end items-center space-x-3">
                                       {b.status==='pending' && <button onClick={()=>saveBooking(b.id, { status:'confirmed' })} className="p-3.5 bg-emerald-50 text-emerald-500 rounded-2xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm"><CheckCircle size={20}/></button>}
-                                      <button onClick={()=>{setSelectedBooking(b); setIsBookingModalOpen(true)}} className="p-3.5 bg-indigo-50 text-indigo-400 rounded-2xl hover:bg-indigo-500 hover:text-white transition-all shadow-sm"><Pencil size={20}/></button>
                                       <button onClick={()=>{setBookingToDelete(b); setIsDeleteModalOpen(true)}} className="p-3.5 bg-red-50 text-red-400 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 size={20}/></button>
                                    </div>
                                 </td>
