@@ -33,9 +33,20 @@ const Admin = () => {
     try {
       const { data: u } = await supabase.from('profiles').select('*').order('role', { ascending: false });
       const { data: p } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      let { data: b, error: bErr } = await supabase.from('bookings').select('*, profiles(full_name, phone, email)').order('booking_date', { ascending: false });
+      
+      // Ordenamos por FECHA (ascendente) y luego por HORA (ascendente)
+      let { data: b, error: bErr } = await supabase
+        .from('bookings')
+        .select('*, profiles(full_name, phone, email)')
+        .order('booking_date', { ascending: true })
+        .order('booking_time', { ascending: true });
+
       if (bErr || !b) {
-        const { data: bFallback } = await supabase.from('bookings').select('*').order('booking_date', { ascending: false });
+        const { data: bFallback } = await supabase
+          .from('bookings')
+          .select('*')
+          .order('booking_date', { ascending: true })
+          .order('booking_time', { ascending: true });
         b = bFallback || [];
       }
       setUsers(u || []);
