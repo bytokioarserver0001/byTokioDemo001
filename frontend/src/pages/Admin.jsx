@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Shield, User, Users, Star, Trash2, Pencil, Plus, Package, LayoutDashboard, Calendar, Clock, CheckCircle, Ban, Search } from 'lucide-react';
+import { Shield, User, Users, Star, Trash2, Pencil, Plus, Package, LayoutDashboard, Calendar, Clock, CheckCircle, Ban, Search, Rocket } from 'lucide-react';
 import UserEditModal from '../components/UserEditModal';
 import ProductEditModal from '../components/ProductEditModal';
 import BookingEditModal from '../components/BookingEditModal';
@@ -41,11 +41,7 @@ const Admin = () => {
       setUsers(u || []);
       setProducts(p || []);
       setBookings(b || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -74,14 +70,17 @@ const Admin = () => {
       if (res.data && (!id || data.status === 'confirmed')) {
         const u = users.find(x => x.id === (data.user_id || res.data.user_id));
         const [h, m] = (res.data.booking_time || '00:00').split(':').map(Number);
-        fetch(N8N_RESERVA_URL, {
+        const adjustedStart = `${res.data.booking_date} ${String(h-1).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
+        const adjustedEnd = `${res.data.booking_date} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
+        
+        await fetch(N8N_RESERVA_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user: { full_name: u?.full_name || 'Cliente', phone: u?.phone || '' },
-            booking: { calendar_start: `${res.data.booking_date} ${String(h-1).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`, calendar_end: `${res.data.booking_date} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`, time: res.data.booking_time?.substring(0,5) }
+            booking: { calendar_start: adjustedStart, calendar_end: adjustedEnd, time: res.data.booking_time?.substring(0,5) }
           })
-        }).catch(e => console.error(e));
+        });
       }
       setIsBookingModalOpen(false);
       fetchData();
@@ -90,12 +89,26 @@ const Admin = () => {
 
   const confirmDeleteBooking = async () => {
     if (!bookingToDelete) return;
-    const [h, m] = (bookingToDelete.booking_time || '00:00').split(':').map(Number);
-    const adjustedTime = `${String(h - 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    fetch(N8N_CANCELAR_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ booking_id: bookingToDelete.id, booking_date: bookingToDelete.booking_date, booking_time: adjustedTime, status: 'cancelled' }) }).catch(e => console.error(e));
-    await supabase.from('bookings').delete().eq('id', bookingToDelete.id);
-    setIsDeleteModalOpen(false);
-    fetchData();
+    try {
+      const [h, m] = (bookingToDelete.booking_time || '00:00').split(':').map(Number);
+      const adjustedTime = `${String(h - 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      
+      // Esperamos a que n8n confirme antes de borrar de la DB
+      await fetch(N8N_CANCELAR_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          booking_id: bookingToDelete.id,
+          booking_date: bookingToDelete.booking_date,
+          booking_time: adjustedTime, // Mandamos la hora del calendario (-1h)
+          status: 'cancelled'
+        })
+      });
+
+      await supabase.from('bookings').delete().eq('id', bookingToDelete.id);
+      setIsDeleteModalOpen(false);
+      fetchData();
+    } catch (err) { alert('Error sincronizando con Calendario: ' + err.message); }
   };
 
   if (loading) return <div className="p-20 text-center font-serif italic text-slate-400">Cargando Management...</div>;
@@ -233,7 +246,7 @@ const Admin = () => {
       <BookingEditModal isOpen={isBookingModalOpen} onClose={()=>setIsBookingModalOpen(false)} booking={selectedBooking} onSave={saveBooking} users={users} />
       <AnimatePresence>
         {isDeleteModalOpen && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"><div className="bg-white p-12 rounded-[4rem] text-center shadow-2xl max-w-sm w-full"><div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><Trash2 size={40}/></div><h2 className="text-3xl font-serif mb-4">¿Borrar?</h2><p className="text-slate-400 mb-10 text-sm leading-relaxed">¿Seguro que querés eliminarlo? Esta acción no se puede deshacer.</p><button onClick={confirmDeleteBooking} className="w-full py-5 bg-red-600 text-white rounded-[2rem] font-bold text-xs uppercase tracking-widest shadow-xl active:scale-95 mb-4">Confirmar</button><button onClick={()=>setIsDeleteModalOpen(false)} className="text-slate-400 font-bold hover:text-slate-600 transition-colors">Volver</button></div></div>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"><div className="bg-white p-12 rounded-[4rem] text-center shadow-2xl max-w-sm w-full"><div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><Trash2 size={40}/></div><h2 className="text-3xl font-serif mb-4">¿Borrar?</h2><p className="text-slate-400 mb-10 text-sm leading-relaxed">¿Seguro que querés eliminarlo? Esta acción lo quitará también de Google Calendar.</p><button onClick={confirmDeleteBooking} className="w-full py-5 bg-red-600 text-white rounded-[2rem] font-bold text-xs uppercase tracking-widest shadow-xl active:scale-95 mb-4">Confirmar y Borrar</button><button onClick={()=>setIsDeleteModalOpen(false)} className="text-slate-400 font-bold hover:text-slate-600 transition-colors">Volver</button></div></div>
         )}
       </AnimatePresence>
     </div>
