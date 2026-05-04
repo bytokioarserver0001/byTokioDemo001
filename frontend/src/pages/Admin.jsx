@@ -34,7 +34,6 @@ const Admin = () => {
       const { data: u } = await supabase.from('profiles').select('*').order('role', { ascending: false });
       const { data: p } = await supabase.from('products').select('*').order('created_at', { ascending: false });
       
-      // Ordenamos por FECHA (ascendente) y luego por HORA (ascendente)
       let { data: b, error: bErr } = await supabase
         .from('bookings')
         .select('*, profiles(full_name, phone, email)')
@@ -82,6 +81,8 @@ const Admin = () => {
       if (savedBooking && (!id || data.status === 'confirmed')) {
         const customer = users.find(x => x.id === (data.user_id || savedBooking.user_id));
         const [h, m] = (savedBooking.booking_time || '00:00').split(':').map(Number);
+        
+        // n8n espera -1h para Google Calendar
         const adjustedStart = `${savedBooking.booking_date} ${String(h-1).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
         const adjustedEnd = `${savedBooking.booking_date} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
         
@@ -90,8 +91,17 @@ const Admin = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             booking_id: savedBooking.id,
-            user: { full_name: customer?.full_name || 'Cliente', phone: customer?.phone || '', email: customer?.email || '' },
-            booking: { calendar_start: adjustedStart, calendar_end: adjustedEnd, booking_date: savedBooking.booking_date, time: savedBooking.booking_time?.substring(0,5) }
+            user: { 
+              full_name: customer?.full_name || 'Cliente', 
+              phone: customer?.phone || '', 
+              email: customer?.email || '' 
+            },
+            booking: { 
+              calendar_start: adjustedStart, 
+              calendar_end: adjustedEnd, 
+              booking_date: savedBooking.booking_date, 
+              time: savedBooking.booking_time?.substring(0,5) 
+            }
           })
         });
       }
@@ -105,16 +115,21 @@ const Admin = () => {
     try {
       const customer = bookingToDelete.profiles || users.find(u => u.id === bookingToDelete.user_id);
       const [h, m] = (bookingToDelete.booking_time || '00:00').split(':').map(Number);
+      
+      // Enviamos el tiempo exacto que busca n8n en el Calendario (-1h)
       const adjustedTime = `${String(h - 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      const exactCalendarDate = bookingToDelete.booking_date; // YYYY-MM-DD
       
       await fetch(N8N_CANCELAR_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           booking_id: bookingToDelete.id,
-          booking_date: bookingToDelete.booking_date,
+          booking_date: exactCalendarDate,
           booking_time: adjustedTime,
+          full_calendar_start: `${exactCalendarDate} ${adjustedTime}:00`, // Mandamos el bloque exacto
           customer_name: customer?.full_name || '',
+          customer_phone: customer?.phone || '', // Agregamos teléfono para doble chequeo en n8n
           status: 'cancelled'
         })
       });
@@ -122,7 +137,7 @@ const Admin = () => {
       await supabase.from('bookings').delete().eq('id', bookingToDelete.id);
       setIsDeleteModalOpen(false);
       fetchData();
-    } catch (err) { alert('Error sincronizando con Calendario: ' + err.message); }
+    } catch (err) { alert('Error: ' + err.message); }
   };
 
   if (loading) return <div className="p-20 text-center font-serif italic text-slate-400">Cargando Management...</div>;
