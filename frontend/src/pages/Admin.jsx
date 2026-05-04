@@ -49,7 +49,7 @@ const Admin = () => {
   const formatDate = (d) => {
     if (!d) return '---';
     const parts = d.split('-');
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return `${parseInt(parts[2])}/${parseInt(parts[1])}/${parts[0]}`;
   };
 
   const saveProduct = async (id, data) => {
@@ -78,18 +78,9 @@ const Admin = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            booking_id: savedBooking.id, // AHORA ENVIAMOS EL ID PARA QUE N8N LO GUARDE
-            user: { 
-              full_name: customer?.full_name || 'Cliente', 
-              phone: customer?.phone || '',
-              email: customer?.email || ''
-            },
-            booking: { 
-              calendar_start: adjustedStart, 
-              calendar_end: adjustedEnd,
-              booking_date: savedBooking.booking_date,
-              time: savedBooking.booking_time?.substring(0,5) 
-            }
+            booking_id: savedBooking.id,
+            user: { full_name: customer?.full_name || 'Cliente', phone: customer?.phone || '', email: customer?.email || '' },
+            booking: { calendar_start: adjustedStart, calendar_end: adjustedEnd, booking_date: savedBooking.booking_date, time: savedBooking.booking_time?.substring(0,5) }
           })
         });
       }
@@ -105,15 +96,14 @@ const Admin = () => {
       const [h, m] = (bookingToDelete.booking_time || '00:00').split(':').map(Number);
       const adjustedTime = `${String(h - 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       
-      // Enviamos el máximo de datos posibles para búsqueda exacta
       await fetch(N8N_CANCELAR_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          booking_id: bookingToDelete.id, // ID ÚNICO
+          booking_id: bookingToDelete.id,
           booking_date: bookingToDelete.booking_date,
           booking_time: adjustedTime,
-          customer_name: customer?.full_name || '', // Validamos con el nombre del cliente
+          customer_name: customer?.full_name || '',
           status: 'cancelled'
         })
       });
@@ -143,22 +133,49 @@ const Admin = () => {
            <div className="space-y-8">
               <SectionEditor sectionName="turnos_section" />
               <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden">
-                 <div className="p-8 border-b flex justify-between items-center bg-slate-50/20">
+                 <div className="p-10 flex justify-between items-center">
                     <h2 className="text-3xl font-serif text-slate-900">Reservas</h2>
-                    <button onClick={()=>{setSelectedBooking(null); setIsBookingModalOpen(true)}} className="bg-black text-white px-8 py-4 rounded-2xl font-bold flex items-center space-x-2 text-sm shadow-xl hover:shadow-black/20"><Plus size={16}/><span>Nuevo Turno</span></button>
+                    <button onClick={()=>{setSelectedBooking(null); setIsBookingModalOpen(true)}} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold flex items-center space-x-2 text-sm shadow-xl active:scale-95 transition-all"><Plus size={18}/><span>Nuevo Turno</span></button>
                  </div>
                  <div className="overflow-x-auto text-slate-900">
                     <table className="w-full text-left">
-                       <thead><tr className="bg-slate-50 text-[10px] uppercase text-slate-400 font-black tracking-widest"><th className="px-10 py-6">Fecha y Hora</th><th className="px-10 py-6">Cliente</th><th className="px-10 py-6 text-center">Estado</th><th className="px-10 py-6 text-right">Acción</th></tr></thead>
-                       <tbody className="divide-y divide-slate-50">
+                       <thead>
+                          <tr className="bg-slate-50/50 text-[10px] uppercase text-slate-400 font-black tracking-widest border-b border-slate-50 text-slate-900">
+                             <th className="px-10 py-6">Fecha y Hora</th>
+                             <th className="px-10 py-6">Cliente</th>
+                             <th className="px-10 py-6">Contacto</th>
+                             <th className="px-10 py-6">Estado</th>
+                             <th className="px-10 py-6 text-right">Acción</th>
+                          </tr>
+                       </thead>
+                       <tbody className="divide-y divide-slate-50 text-slate-900">
                           {bookings.map(b => {
                              const customer = b.profiles || users.find(u => u.id === b.user_id);
                              return (
-                             <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-10 py-8 font-bold text-slate-900 text-sm whitespace-nowrap">{formatDate(b.booking_date)} {b.booking_time?.substring(0,5)}hs</td>
-                                <td className="px-10 py-8"><div className="font-bold text-sm text-slate-800">{customer?.full_name || 'Sin nombre'}</div><div className="text-[10px] text-slate-400 font-mono italic">ID: {b.user_id?.substring(0,8)}...</div></td>
-                                <td className="px-10 py-8 text-center text-xs">{b.status==='pending'?<span className="inline-flex items-center px-4 py-2 rounded-xl text-[9px] font-black uppercase bg-amber-50 text-amber-600 border border-amber-100 min-w-[110px] justify-center tracking-widest"><Clock size={12} className="mr-2" /> PENDIENTE</span>:<span className="inline-flex items-center px-4 py-2 rounded-xl text-[9px] font-black uppercase bg-emerald-50 text-emerald-600 border border-emerald-100 min-w-[110px] justify-center tracking-widest"><CheckCircle size={12} className="mr-2" /> CONFIRMADO</span>}</td>
-                                <td className="px-10 py-8 text-right space-x-2"><div className="flex justify-end items-center space-x-2">{b.status==='pending' && <button onClick={()=>saveBooking(b.id, { status:'confirmed' })} className="p-3 bg-emerald-50 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-white transition-all"><CheckCircle size={18}/></button>}<button onClick={()=>{setSelectedBooking(b); setIsBookingModalOpen(true)}} className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-200 transition-all"><Pencil size={18}/></button><button onClick={()=>{setBookingToDelete(b); setIsDeleteModalOpen(true)}} className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={18}/></button></div></td>
+                             <tr key={b.id} className="hover:bg-slate-50/30 transition-colors">
+                                <td className="px-10 py-10 font-bold text-slate-900 text-base">{formatDate(b.booking_date)} {b.booking_time?.substring(0,5)}hs</td>
+                                <td className="px-10 py-10">
+                                   <div className="font-bold text-slate-900 text-base mb-0.5">{customer?.full_name || 'Sin nombre'}</div>
+                                   <div className="text-[10px] text-slate-300 font-mono italic">ID: {b.user_id?.substring(0,8)}...</div>
+                                </td>
+                                <td className="px-10 py-10">
+                                   <div className="text-[11px] text-slate-400 font-medium mb-1">{customer?.email || '---'}</div>
+                                   <div className="text-slate-900 font-bold text-sm tracking-tight">{customer?.phone || '---'}</div>
+                                </td>
+                                <td className="px-10 py-10">
+                                   {b.status==='pending' ? (
+                                      <span className="inline-flex items-center px-4 py-2 rounded-2xl text-[9px] font-black uppercase bg-amber-50 text-amber-600 border border-amber-100/50 tracking-widest"><Clock size={12} className="mr-2" /> PENDIENTE</span>
+                                   ) : (
+                                      <span className="inline-flex items-center px-4 py-2 rounded-2xl text-[9px] font-black uppercase bg-emerald-50 text-emerald-600 border border-emerald-100/50 tracking-widest"><CheckCircle size={12} className="mr-2" /> CONFIRMADO</span>
+                                   )}
+                                </td>
+                                <td className="px-10 py-10 text-right">
+                                   <div className="flex justify-end items-center space-x-3">
+                                      {b.status==='pending' && <button onClick={()=>saveBooking(b.id, { status:'confirmed' })} className="p-3.5 bg-emerald-50 text-emerald-500 rounded-2xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm"><CheckCircle size={20}/></button>}
+                                      <button onClick={()=>{setSelectedBooking(b); setIsBookingModalOpen(true)}} className="p-3.5 bg-indigo-50 text-indigo-400 rounded-2xl hover:bg-indigo-500 hover:text-white transition-all shadow-sm"><Pencil size={20}/></button>
+                                      <button onClick={()=>{setBookingToDelete(b); setIsDeleteModalOpen(true)}} className="p-3.5 bg-red-50 text-red-400 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 size={20}/></button>
+                                   </div>
+                                </td>
                              </tr>
                           )})}
                        </tbody>
@@ -176,7 +193,7 @@ const Admin = () => {
                    <div className="flex items-center space-x-2"><Search size={16} /> <span className="text-[10px]">{clientCount} Registrados</span></div>
                 </div>
              </div>
-             <div className="overflow-x-auto">
+             <div className="overflow-x-auto text-slate-900">
                 <table className="w-full text-left">
                    <thead>
                       <tr className="text-[10px] uppercase text-slate-400 font-bold tracking-widest border-b border-slate-50 pb-8">
@@ -190,10 +207,10 @@ const Admin = () => {
                       {users.filter(u => u.role === 'cliente').map(u => (
                         <tr key={u.id} className="hover:bg-slate-50/30 transition-colors">
                            <td className="py-8 px-4 flex items-center space-x-5">
-                              <div className="w-14 h-14 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-black text-xl shadow-inner uppercase">{(u.full_name || u.email || 'U')[0]}</div>
+                              <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 font-black text-xl shadow-inner uppercase">{(u.full_name || u.email || 'U')[0]}</div>
                               <div>
                                  <div className="font-black text-slate-900 text-lg tracking-tight mb-0.5">{u.full_name || 'Sin Nombre'}</div>
-                                 <div className="text-[10px] text-slate-400 font-mono">{u.id.substring(0,8)}...</div>
+                                 <div className="text-[10px] text-slate-400 font-mono italic">ID: {u.id.substring(0,8)}...</div>
                               </div>
                            </td>
                            <td className="py-8 px-4">
@@ -203,7 +220,7 @@ const Admin = () => {
                               <div className="text-xs text-slate-400 font-medium mb-1">{u.email || '---'}</div>
                               <div className="text-slate-800 font-black text-sm tracking-tighter">{u.phone || '---'}</div>
                            </td>
-                           <td className="py-8 px-4 text-right space-x-3">
+                           <td className="py-8 px-4 text-right space-x-3 text-slate-900">
                               <div className="flex justify-end items-center space-x-3">
                                  <button onClick={() => { setSelectedUser(u); setIsUserModalOpen(true); }} className="p-3.5 bg-white border border-slate-100 text-slate-400 rounded-2xl hover:bg-slate-900 hover:text-white transition-all shadow-sm"><Pencil size={18}/></button>
                                  <button className="p-3.5 bg-white border border-slate-100 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Ban size={18}/></button>
@@ -237,14 +254,14 @@ const Admin = () => {
            <div className="space-y-10">
               <SectionEditor sectionName={activeTab==='servicios'?'services_section':'productos_section'} />
               <div className="bg-white p-10 rounded-[3.5rem] shadow-2xl border border-slate-100">
-                 <div className="flex justify-between items-center mb-10 px-4"><h2 className="text-3xl font-serif">Catálogo</h2><button onClick={()=>{setSelectedProduct({category:activeTab==='servicios'?'servicio':'producto'}); setIsProductModalOpen(true)}} className="p-4 bg-slate-50 rounded-2xl transition-transform active:scale-95"><Plus size={24}/></button></div>
+                 <div className="flex justify-between items-center mb-10 px-4"><h2 className="text-3xl font-serif">Catálogo</h2><button onClick={()=>{setSelectedProduct({category:activeTab==='servicios'?'servicio':'producto'}); setIsProductModalOpen(true)}} className="p-4 bg-slate-50 rounded-2xl shadow-xl transition-transform active:scale-95"><Plus size={24}/></button></div>
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                     {products.filter(p=>activeTab==='servicios'?p.category==='servicio':p.category!=='servicio').map(p=>(
                        <div key={p.id} className="relative aspect-square bg-slate-50 rounded-[2.5rem] overflow-hidden group shadow-inner">
                           {(p.images && p.images[0]) && <img src={p.images[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"/>}
-                          <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[10px] font-black shadow-xl tracking-tighter">${p.price}</div>
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center space-x-3"><button onClick={()=>{setSelectedProduct(p); setIsProductModalOpen(true)}} className="p-4 bg-white rounded-2xl shadow-xl hover:scale-110 transition-all"><Pencil size={18}/></button></div>
-                          <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-sm p-3.5 rounded-3xl text-[10px] font-black truncate text-center shadow-lg tracking-tight uppercase">{p.name}</div>
+                          <div className="absolute top-4 right-4 bg-black/90 backdrop-blur-md text-white px-5 py-2 rounded-2xl text-xs font-black shadow-2xl tracking-tighter">${p.price}</div>
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center space-x-3 text-slate-900"><button onClick={()=>{setSelectedProduct(p); setIsProductModalOpen(true)}} className="p-4 bg-white rounded-2xl shadow-2xl hover:scale-110 transition-all"><Pencil size={18}/></button></div>
+                          <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm p-4 rounded-[2rem] text-xs font-black truncate text-center shadow-lg tracking-tight uppercase">{p.name}</div>
                        </div>
                     ))}
                  </div>
@@ -259,7 +276,7 @@ const Admin = () => {
       <BookingEditModal isOpen={isBookingModalOpen} onClose={()=>setIsBookingModalOpen(false)} booking={selectedBooking} onSave={saveBooking} users={users} />
       <AnimatePresence>
         {isDeleteModalOpen && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"><div className="bg-white p-12 rounded-[4rem] text-center shadow-2xl max-w-sm w-full"><div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><Trash2 size={40}/></div><h2 className="text-3xl font-serif mb-4">¿Borrar?</h2><p className="text-slate-400 mb-10 text-sm leading-relaxed">¿Seguro que querés eliminarlo? Esta acción lo quitará también de Google Calendar de forma permanente.</p><button onClick={confirmDeleteBooking} className="w-full py-5 bg-red-600 text-white rounded-[2rem] font-bold text-xs uppercase tracking-widest shadow-xl active:scale-95 mb-4">Confirmar y Borrar</button><button onClick={()=>setIsDeleteModalOpen(false)} className="text-slate-400 font-bold hover:text-slate-600 transition-colors">Volver</button></div></div>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"><div className="bg-white p-12 rounded-[4rem] text-center shadow-2xl max-w-sm w-full font-sans text-slate-900"><div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><Trash2 size={40}/></div><h2 className="text-3xl font-serif mb-4">¿Borrar?</h2><p className="text-slate-400 mb-10 text-sm leading-relaxed">¿Seguro que querés eliminarlo? Esta acción lo quitará también de Google Calendar de forma permanente.</p><button onClick={confirmDeleteBooking} className="w-full py-5 bg-red-600 text-white rounded-[2rem] font-bold text-xs uppercase tracking-widest shadow-xl active:scale-95 mb-4">Confirmar y Borrar</button><button onClick={()=>setIsDeleteModalOpen(false)} className="text-slate-400 font-bold hover:text-slate-600 transition-colors">Volver</button></div></div>
         )}
       </AnimatePresence>
     </div>
