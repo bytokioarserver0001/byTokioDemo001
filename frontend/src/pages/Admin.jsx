@@ -67,18 +67,29 @@ const Admin = () => {
       if (id) res = await supabase.from('bookings').update(data).eq('id', id).select().single();
       else res = await supabase.from('bookings').insert([data]).select().single();
       
-      if (res.data && (!id || data.status === 'confirmed')) {
-        const u = users.find(x => x.id === (data.user_id || res.data.user_id));
-        const [h, m] = (res.data.booking_time || '00:00').split(':').map(Number);
-        const adjustedStart = `${res.data.booking_date} ${String(h-1).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
-        const adjustedEnd = `${res.data.booking_date} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
+      const savedBooking = res.data;
+      if (savedBooking && (!id || data.status === 'confirmed')) {
+        const customer = users.find(x => x.id === (data.user_id || savedBooking.user_id));
+        const [h, m] = (savedBooking.booking_time || '00:00').split(':').map(Number);
+        const adjustedStart = `${savedBooking.booking_date} ${String(h-1).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
+        const adjustedEnd = `${savedBooking.booking_date} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
         
         await fetch(N8N_RESERVA_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user: { full_name: u?.full_name || 'Cliente', phone: u?.phone || '' },
-            booking: { calendar_start: adjustedStart, calendar_end: adjustedEnd, time: res.data.booking_time?.substring(0,5) }
+            booking_id: savedBooking.id, // AHORA ENVIAMOS EL ID PARA QUE N8N LO GUARDE
+            user: { 
+              full_name: customer?.full_name || 'Cliente', 
+              phone: customer?.phone || '',
+              email: customer?.email || ''
+            },
+            booking: { 
+              calendar_start: adjustedStart, 
+              calendar_end: adjustedEnd,
+              booking_date: savedBooking.booking_date,
+              time: savedBooking.booking_time?.substring(0,5) 
+            }
           })
         });
       }
@@ -90,17 +101,19 @@ const Admin = () => {
   const confirmDeleteBooking = async () => {
     if (!bookingToDelete) return;
     try {
+      const customer = bookingToDelete.profiles || users.find(u => u.id === bookingToDelete.user_id);
       const [h, m] = (bookingToDelete.booking_time || '00:00').split(':').map(Number);
       const adjustedTime = `${String(h - 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       
-      // Esperamos a que n8n confirme antes de borrar de la DB
+      // Enviamos el máximo de datos posibles para búsqueda exacta
       await fetch(N8N_CANCELAR_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          booking_id: bookingToDelete.id,
+          booking_id: bookingToDelete.id, // ID ÚNICO
           booking_date: bookingToDelete.booking_date,
-          booking_time: adjustedTime, // Mandamos la hora del calendario (-1h)
+          booking_time: adjustedTime,
+          customer_name: customer?.full_name || '', // Validamos con el nombre del cliente
           status: 'cancelled'
         })
       });
@@ -134,7 +147,7 @@ const Admin = () => {
                     <h2 className="text-3xl font-serif text-slate-900">Reservas</h2>
                     <button onClick={()=>{setSelectedBooking(null); setIsBookingModalOpen(true)}} className="bg-black text-white px-8 py-4 rounded-2xl font-bold flex items-center space-x-2 text-sm shadow-xl hover:shadow-black/20"><Plus size={16}/><span>Nuevo Turno</span></button>
                  </div>
-                 <div className="overflow-x-auto">
+                 <div className="overflow-x-auto text-slate-900">
                     <table className="w-full text-left">
                        <thead><tr className="bg-slate-50 text-[10px] uppercase text-slate-400 font-black tracking-widest"><th className="px-10 py-6">Fecha y Hora</th><th className="px-10 py-6">Cliente</th><th className="px-10 py-6 text-center">Estado</th><th className="px-10 py-6 text-right">Acción</th></tr></thead>
                        <tbody className="divide-y divide-slate-50">
@@ -246,7 +259,7 @@ const Admin = () => {
       <BookingEditModal isOpen={isBookingModalOpen} onClose={()=>setIsBookingModalOpen(false)} booking={selectedBooking} onSave={saveBooking} users={users} />
       <AnimatePresence>
         {isDeleteModalOpen && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"><div className="bg-white p-12 rounded-[4rem] text-center shadow-2xl max-w-sm w-full"><div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><Trash2 size={40}/></div><h2 className="text-3xl font-serif mb-4">¿Borrar?</h2><p className="text-slate-400 mb-10 text-sm leading-relaxed">¿Seguro que querés eliminarlo? Esta acción lo quitará también de Google Calendar.</p><button onClick={confirmDeleteBooking} className="w-full py-5 bg-red-600 text-white rounded-[2rem] font-bold text-xs uppercase tracking-widest shadow-xl active:scale-95 mb-4">Confirmar y Borrar</button><button onClick={()=>setIsDeleteModalOpen(false)} className="text-slate-400 font-bold hover:text-slate-600 transition-colors">Volver</button></div></div>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"><div className="bg-white p-12 rounded-[4rem] text-center shadow-2xl max-w-sm w-full"><div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><Trash2 size={40}/></div><h2 className="text-3xl font-serif mb-4">¿Borrar?</h2><p className="text-slate-400 mb-10 text-sm leading-relaxed">¿Seguro que querés eliminarlo? Esta acción lo quitará también de Google Calendar de forma permanente.</p><button onClick={confirmDeleteBooking} className="w-full py-5 bg-red-600 text-white rounded-[2rem] font-bold text-xs uppercase tracking-widest shadow-xl active:scale-95 mb-4">Confirmar y Borrar</button><button onClick={()=>setIsDeleteModalOpen(false)} className="text-slate-400 font-bold hover:text-slate-600 transition-colors">Volver</button></div></div>
         )}
       </AnimatePresence>
     </div>
