@@ -41,11 +41,7 @@ const Admin = () => {
         .order('booking_time', { ascending: true });
 
       if (bErr || !b) {
-        const { data: bFallback } = await supabase
-          .from('bookings')
-          .select('*')
-          .order('booking_date', { ascending: true })
-          .order('booking_time', { ascending: true });
+        const { data: bFallback } = await supabase.from('bookings').select('*').order('booking_date', { ascending: true });
         b = bFallback || [];
       }
       setUsers(u || []);
@@ -78,11 +74,9 @@ const Admin = () => {
       else res = await supabase.from('bookings').insert([data]).select().single();
       
       const savedBooking = res.data;
-      if (savedBooking && (!id || data.status === 'confirmed')) {
+      if (savedBooking && (!id || (data.status && data.status === 'confirmed'))) {
         const customer = users.find(x => x.id === (data.user_id || savedBooking.user_id));
         const [h, m] = (savedBooking.booking_time || '00:00').split(':').map(Number);
-        
-        // n8n espera -1h para Google Calendar
         const adjustedStart = `${savedBooking.booking_date} ${String(h-1).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
         const adjustedEnd = `${savedBooking.booking_date} ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
         
@@ -91,17 +85,8 @@ const Admin = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             booking_id: savedBooking.id,
-            user: { 
-              full_name: customer?.full_name || 'Cliente', 
-              phone: customer?.phone || '', 
-              email: customer?.email || '' 
-            },
-            booking: { 
-              calendar_start: adjustedStart, 
-              calendar_end: adjustedEnd, 
-              booking_date: savedBooking.booking_date, 
-              time: savedBooking.booking_time?.substring(0,5) 
-            }
+            user: { full_name: customer?.full_name || 'Cliente', phone: customer?.phone || '', email: customer?.email || '' },
+            booking: { calendar_start: adjustedStart, calendar_end: adjustedEnd, booking_date: savedBooking.booking_date, time: savedBooking.booking_time?.substring(0,5) }
           })
         });
       }
@@ -112,32 +97,36 @@ const Admin = () => {
 
   const confirmDeleteBooking = async () => {
     if (!bookingToDelete) return;
+    const currentToDelete = { ...bookingToDelete }; // Congelamos el objeto para evitar cambios de estado
     try {
-      const customer = bookingToDelete.profiles || users.find(u => u.id === bookingToDelete.user_id);
-      const [h, m] = (bookingToDelete.booking_time || '00:00').split(':').map(Number);
-      
-      // Enviamos el tiempo exacto que busca n8n en el Calendario (-1h)
+      const customer = currentToDelete.profiles || users.find(u => u.id === currentToDelete.user_id);
+      const [h, m] = (currentToDelete.booking_time || '00:00').split(':').map(Number);
       const adjustedTime = `${String(h - 1).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      const exactCalendarDate = bookingToDelete.booking_date; // YYYY-MM-DD
       
-      await fetch(N8N_CANCELAR_URL, {
+      const res = await fetch(N8N_CANCELAR_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          booking_id: bookingToDelete.id,
-          booking_date: exactCalendarDate,
+          booking_id: currentToDelete.id,
+          booking_date: currentToDelete.booking_date,
           booking_time: adjustedTime,
-          full_calendar_start: `${exactCalendarDate} ${adjustedTime}:00`, // Mandamos el bloque exacto
+          full_calendar_start: `${currentToDelete.booking_date}T${adjustedTime}:00`,
           customer_name: customer?.full_name || '',
-          customer_phone: customer?.phone || '', // Agregamos teléfono para doble chequeo en n8n
+          customer_phone: customer?.phone || '',
           status: 'cancelled'
         })
       });
 
-      await supabase.from('bookings').delete().eq('id', bookingToDelete.id);
+      if (!res.ok) throw new Error('El servidor de Calendario no respondió correctamente.');
+
+      await supabase.from('bookings').delete().eq('id', currentToDelete.id);
       setIsDeleteModalOpen(false);
+      setBookingToDelete(null);
       fetchData();
-    } catch (err) { alert('Error: ' + err.message); }
+    } catch (err) { 
+      alert('Error crítico: ' + err.message); 
+      setIsDeleteModalOpen(false);
+    }
   };
 
   if (loading) return <div className="p-20 text-center font-serif italic text-slate-400">Cargando Management...</div>;
@@ -198,7 +187,7 @@ const Admin = () => {
                                 <td className="px-10 py-10 text-right">
                                    <div className="flex justify-end items-center space-x-3">
                                       {b.status==='pending' && <button onClick={()=>saveBooking(b.id, { status:'confirmed' })} className="p-3.5 bg-emerald-50 text-emerald-500 rounded-2xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm"><CheckCircle size={20}/></button>}
-                                      <button onClick={()=>{setBookingToDelete(b); setIsDeleteModalOpen(true)}} className="p-3.5 bg-red-50 text-red-400 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 size={20}/></button>
+                                      <button onClick={()=>{setBookingToDelete({...b}); setIsDeleteModalOpen(true)}} className="p-3.5 bg-red-50 text-red-400 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-sm"><Trash2 size={20}/></button>
                                    </div>
                                 </td>
                              </tr>
@@ -301,7 +290,20 @@ const Admin = () => {
       <BookingEditModal isOpen={isBookingModalOpen} onClose={()=>setIsBookingModalOpen(false)} booking={selectedBooking} onSave={saveBooking} users={users} />
       <AnimatePresence>
         {isDeleteModalOpen && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"><div className="bg-white p-12 rounded-[4rem] text-center shadow-2xl max-w-sm w-full font-sans text-slate-900"><div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><Trash2 size={40}/></div><h2 className="text-3xl font-serif mb-4">¿Borrar?</h2><p className="text-slate-400 mb-10 text-sm leading-relaxed">¿Seguro que querés eliminarlo? Esta acción lo quitará también de Google Calendar de forma permanente.</p><button onClick={confirmDeleteBooking} className="w-full py-5 bg-red-600 text-white rounded-[2rem] font-bold text-xs uppercase tracking-widest shadow-xl active:scale-95 mb-4">Confirmar y Borrar</button><button onClick={()=>setIsDeleteModalOpen(false)} className="text-slate-400 font-bold hover:text-slate-600 transition-colors">Volver</button></div></div>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md font-sans text-slate-900">
+            <div className="bg-white p-12 rounded-[4rem] text-center shadow-2xl max-w-md w-full">
+              <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8"><Trash2 size={40}/></div>
+              <h2 className="text-3xl font-serif mb-4">¿Borrar Turno?</h2>
+              <div className="bg-slate-50 p-6 rounded-3xl mb-8 text-left">
+                <div className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Cliente</div>
+                <div className="font-bold text-slate-900 mb-4">{bookingToDelete?.profiles?.full_name || 'Sin Nombre'}</div>
+                <div className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Fecha y Hora</div>
+                <div className="font-bold text-slate-900">{formatDate(bookingToDelete?.booking_date)} a las {bookingToDelete?.booking_time?.substring(0,5)}hs</div>
+              </div>
+              <button onClick={confirmDeleteBooking} className="w-full py-5 bg-red-600 text-white rounded-[2rem] font-bold text-xs uppercase tracking-widest shadow-xl active:scale-95 mb-4">Confirmar y Borrar</button>
+              <button onClick={()=>{setIsDeleteModalOpen(false); setBookingToDelete(null);}} className="text-slate-400 font-bold hover:text-slate-600 transition-colors">Cancelar</button>
+            </div>
+          </div>
         )}
       </AnimatePresence>
     </div>
