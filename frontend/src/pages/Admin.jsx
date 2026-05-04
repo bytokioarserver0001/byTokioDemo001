@@ -94,7 +94,7 @@ const Admin = () => {
   if (loading) return <div className="p-20 text-center font-serif italic text-slate-400">Cargando...</div>;
 
   return (
-    <div className="pt-32 pb-20 max-w-7xl mx-auto px-6">
+    <div className="pt-32 pb-20 max-w-7xl mx-auto px-6 font-sans">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
         <div><h1 className="text-5xl font-serif text-slate-900">Management</h1><p className="text-slate-400 italic">Control total de tu sitio wellness.</p></div>
         <div className="flex flex-col gap-2">
@@ -151,8 +151,9 @@ const Admin = () => {
                     {products.filter(p=>activeTab==='servicios'?p.category==='servicio':p.category!=='servicio').map(p=>(
                        <div key={p.id} className="relative aspect-square bg-slate-50 rounded-3xl overflow-hidden group">
                           {(p.images && p.images[0]) && <img src={p.images[0]} className="w-full h-full object-cover"/>}
+                          <div className="absolute top-2 right-2 bg-black/80 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg">${p.price}</div>
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center space-x-2"><button onClick={()=>{setSelectedProduct(p); setIsProductModalOpen(true)}} className="p-3 bg-white rounded-xl"><Pencil size={16}/></button></div>
-                          <div className="absolute bottom-2 left-2 right-2 bg-white/90 p-2 rounded-xl text-[10px] font-bold truncate">{p.name}</div>
+                          <div className="absolute bottom-2 left-2 right-2 bg-white/95 backdrop-blur-sm p-2 rounded-xl text-[10px] font-bold truncate text-center shadow-sm">{p.name}</div>
                        </div>
                     ))}
                  </div>
